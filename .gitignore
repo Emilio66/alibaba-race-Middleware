@@ -1,2 +1,15 @@
-target
+/target
+/.settings
+/.project
+/.classpath
+/.springBeans
+/.idea
+
+*.iml
 *.class
+*.jar
+*.war
+*.ear
+
+.DS_Store
+bin/
