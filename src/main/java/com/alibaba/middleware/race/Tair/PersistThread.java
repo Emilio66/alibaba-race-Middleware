@@ -30,7 +30,7 @@ public class PersistThread implements Runnable {
             Double value = entry.getValue();
 
             Log.debug(key + " : " + value);         //log
-            tairOperator.write(RaceConfig.prex_tmall + key, value);   //persist
+            tairOperator.write(prefix +"_"+ key, value);   //persist
         }
     }
 }
