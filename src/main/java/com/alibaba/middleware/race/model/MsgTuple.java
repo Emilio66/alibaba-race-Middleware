@@ -1,9 +1,11 @@
 package com.alibaba.middleware.race.model;
 
+
 import backtype.storm.generated.GlobalStreamId;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.MessageId;
 import backtype.storm.tuple.TupleExt;
+
 import com.alibaba.rocketmq.common.message.MessageExt;
 import com.alibaba.rocketmq.common.message.MessageQueue;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -18,7 +20,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * Created by zhaoz on 2016/7/1.
  */
+
 public class MsgTuple implements Serializable, TupleExt{
+
     private static final long serialVersionUID= 783249752131L;
 
     protected final List<MessageExt> msgList;
@@ -268,4 +272,5 @@ public class MsgTuple implements Serializable, TupleExt{
     public void setCreationTimeStamp(long l) {
 
     }
+
 }

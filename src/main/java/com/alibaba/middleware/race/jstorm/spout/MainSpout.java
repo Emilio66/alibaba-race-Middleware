@@ -65,7 +65,9 @@ public class MainSpout implements IRichSpout, MessageListenerConcurrently {
         Log.info(sb.toString());
 
         consumer = new DefaultMQPushConsumer(RaceConfig.MetaConsumerGroup);
+
         consumer.setNamesrvAddr(System.getProperty("NAMESRV_ADDR"));//(RaceConfig.nameServer);
+
         String instanceName = RaceConfig.MetaConsumerGroup + "@" + JStormUtils.process_pid();
         consumer.setInstanceName(instanceName);
         consumer.setConsumeFromWhere(ConsumeFromWhere.CONSUME_FROM_FIRST_OFFSET);//设置第一次消费位置，非第一次接上次位置

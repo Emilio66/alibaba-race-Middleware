@@ -28,6 +28,7 @@ public class PayRatioBolt implements IRichBolt{
     public static ConcurrentHashMap<Long, Double> mobileMap = new ConcurrentHashMap<Long, Double>();
     public static ConcurrentHashMap<Long, Double> pcMap = new ConcurrentHashMap<Long, Double>();
     public static ConcurrentHashMap<Long, Double> ratioMap = new ConcurrentHashMap<Long, Double>();
+
     public static ScheduledThreadPoolExecutor scheduledPersist = new ScheduledThreadPoolExecutor(RaceConfig.persistThreadNum);
 
     @Override
