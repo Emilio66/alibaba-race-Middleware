@@ -10,8 +10,6 @@ Level orders:
 
 <configuration>
 
-    <property name="destination" value="${catalina.home}/logs/iExpenseManager/iExpenseManager" />
-
     <!-- Console appender -->
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
@@ -21,9 +19,9 @@ Level orders:
 
     <!-- File appender -->
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${destination}.log</file>
+        <file>race.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <FileNamePattern>${destination}-%d{yyyy-MM-dd}.zip</FileNamePattern>
+            <FileNamePattern>race-%d{yyyy-MM-dd}.zip</FileNamePattern>
             <timeBasedFileNamingAndTriggeringPolicy
                     class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
                 <maxFileSize>10MB</maxFileSize>
@@ -36,7 +34,7 @@ Level orders:
         </encoder>
     </appender>
 
-    <logger name="com.yungoal.expman" additivity="false">
+    <logger name="com.alibaba.middleware.race" additivity="false">
         <level value="DEBUG" />
         <appender-ref ref="STDOUT" />
         <appender-ref ref="FILE" />

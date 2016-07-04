@@ -37,14 +37,8 @@ public class RaceTopology {
 
 
     public static void main(String[] args) throws Exception {
-
-        InputStream in = RaceTopology.class.getClassLoader().getResourceAsStream("application.properties");
-        Properties prop = new Properties();
-        prop.load(in);
-        LOG.debug(prop.getProperty("log4j.rootLogger"));
-        PropertyConfigurator.configure(prop);
-
         Config conf = new Config();
+        conf.put("user.defined.logback.conf", "classpath:logback.xml");
         int spout_Parallelism_hint = 1;
         int dispatch_Parallelism_hint = 1;
         int count_Parallelism_hint = 1;
