@@ -189,7 +189,7 @@
         <configuration>
           <appendAssemblyId>false</appendAssemblyId>
           <descriptors>
-            <descriptor>src/resources/assembly.xml</descriptor>
+            <descriptor>src/main/resources/assembly.xml</descriptor>
           </descriptors>
           <descriptorRefs>
             <descriptorRef>jar-with-dependencies</descriptorRef>
