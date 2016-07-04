@@ -41,12 +41,13 @@ public class RaceTopology {
         InputStream in = RaceTopology.class.getClassLoader().getResourceAsStream("application.properties");
         Properties prop = new Properties();
         prop.load(in);
+        LOG.debug(prop.getProperty("log4j.rootLogger"));
         PropertyConfigurator.configure(prop);
 
         Config conf = new Config();
         int spout_Parallelism_hint = 1;
-        int dispatch_Parallelism_hint = 4;
-        int count_Parallelism_hint = 4;
+        int dispatch_Parallelism_hint = 1;
+        int count_Parallelism_hint = 1;
 
         TopologyBuilder builder = new TopologyBuilder();
 

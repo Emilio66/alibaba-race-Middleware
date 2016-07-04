@@ -8,7 +8,10 @@ import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Values;
 import com.alibaba.jstorm.utils.JStormUtils;
 import com.alibaba.middleware.race.RaceConfig;
+import com.alibaba.middleware.race.RaceUtils;
+import com.alibaba.middleware.race.jstorm.tuple.PaymentTuple;
 import com.alibaba.middleware.race.model.MsgTuple;
+import com.alibaba.middleware.race.model.PaymentMessage;
 import com.alibaba.rocketmq.client.consumer.DefaultMQPushConsumer;
 import com.alibaba.rocketmq.client.consumer.listener.ConsumeConcurrentlyContext;
 import com.alibaba.rocketmq.client.consumer.listener.ConsumeConcurrentlyStatus;
@@ -19,8 +22,10 @@ import com.alibaba.rocketmq.common.message.MessageExt;
 import com.alibaba.rocketmq.common.message.MessageQueue;
 import org.apache.log4j.Logger;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -34,16 +39,20 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class MainSpout implements IRichSpout, MessageListenerConcurrently {
 
     private static final long serialVersionUID = 829732194381L;
-    private static final Logger Log = Logger.getLogger(MainSpout.class);
+    private static final Logger LOG = Logger.getLogger(MainSpout.class);
 
     protected boolean flowControl;  //流量控制，消息缓存与否
     protected boolean autoACK;      //是否使用默认的ACK, 后续实现ACKer
     protected String id;
     protected SpoutOutputCollector collector;
     protected transient DefaultMQPushConsumer consumer; //pushConsumer封装了pull轮询，定制可用原生pullConsumer
+
     protected transient LinkedBlockingDeque<MsgTuple> tmallQueue; //消息缓冲队列
     protected transient LinkedBlockingDeque<MsgTuple> taobaoQueue;
     protected transient LinkedBlockingDeque<MsgTuple> payQueue;
+
+    protected transient Set<Long> tmallOrder;
+    protected transient Set<Long> taobaoOrder;
 
     public static String tmallStream = "tmall";
     public static String taobaoStream = "taobao";
@@ -56,13 +65,15 @@ public class MainSpout implements IRichSpout, MessageListenerConcurrently {
         tmallQueue = new LinkedBlockingDeque<MsgTuple>();
         taobaoQueue = new LinkedBlockingDeque<MsgTuple>();
         payQueue = new LinkedBlockingDeque<MsgTuple>();
+        tmallOrder = new HashSet<Long>();
+        taobaoOrder = new HashSet<Long>();
         flowControl = RaceConfig.isFlowControl;
         autoACK = RaceConfig.autoACK;
 
         //log
         StringBuilder sb = new StringBuilder();
         sb.append("Begin to init MetaSpout:").append(id);
-        Log.info(sb.toString());
+        LOG.info(sb.toString());
 
         consumer = new DefaultMQPushConsumer(RaceConfig.MetaConsumerGroup);
 
@@ -79,9 +90,9 @@ public class MainSpout implements IRichSpout, MessageListenerConcurrently {
             consumer.registerMessageListener(this); //设置消息监听器, consumeMessage()实现消息处理逻辑
             consumer.start();       //!!启动consumer, 一定不能缺少！
 
-            Log.info("successfully create consumer " + instanceName);
+            LOG.info("successfully create consumer " + instanceName);
         } catch (MQClientException e) {
-            Log.error("Failed to create Consumer subscription ", e);
+            LOG.error("Failed to create Consumer subscription ", e);
             e.printStackTrace();
         }
 
@@ -114,7 +125,7 @@ public class MainSpout implements IRichSpout, MessageListenerConcurrently {
             payTuple = payQueue.take();
 
         } catch (InterruptedException e) {
-            Log.error("Failed to pull message", e);
+            LOG.error("Failed to pull message", e);
             e.printStackTrace();
         }
 
@@ -124,6 +135,10 @@ public class MainSpout implements IRichSpout, MessageListenerConcurrently {
             sendTuple(taobaoTuple, taobaoStream);
         if (payTuple != null)
             sendTuple(payTuple, payStream);
+    }
+
+    public void sendTuple(String streamID, List<Object> tuples, Object messageID) {
+        collector.emit(streamID, tuples, messageID);
     }
 
     /**
@@ -137,7 +152,7 @@ public class MainSpout implements IRichSpout, MessageListenerConcurrently {
     public ConsumeConcurrentlyStatus consumeMessage(List<MessageExt> msgList, ConsumeConcurrentlyContext context) {
         MessageQueue queue = context.getMessageQueue();
         String topic = queue.getTopic();        //每个topic 对应若干条queue, 每个queue有一个messageList，Q：是否要逐条检查？(可以试一下)
-        MsgTuple msgTuple = new MsgTuple(msgList, queue); //构造 tuple stream
+        MsgTuple msgTuple = new MsgTuple(msgList, queue);
 
         if(flowControl) {
             if (topic.equals(RaceConfig.MqPayTopic)) {
@@ -168,7 +183,7 @@ public class MainSpout implements IRichSpout, MessageListenerConcurrently {
             try {
                 msgTuple.waitFinish();  //等待ACK
             } catch (InterruptedException e) {
-                Log.error("Failed to ACK .. ", e);
+                LOG.error("Failed to ACK .. ", e);
                 e.printStackTrace();
             }
             if (msgTuple.isSuccess() == true) {

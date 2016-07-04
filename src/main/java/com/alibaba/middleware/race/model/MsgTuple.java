@@ -21,7 +21,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Created by zhaoz on 2016/7/1.
  */
 
-public class MsgTuple implements Serializable, TupleExt{
+public class MsgTuple implements Serializable, TupleExt {
 
     private static final long serialVersionUID= 783249752131L;
 

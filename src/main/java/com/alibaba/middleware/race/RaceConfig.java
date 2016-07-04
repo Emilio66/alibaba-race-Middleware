@@ -9,7 +9,7 @@ public class RaceConfig implements Serializable {
 
     public static String groupName          = "singularity";
     public static String nameServer         = "127.0.0.1:9876";
-    public static boolean isFlowControl     = true; //调优用, 流量控制，消息缓存
+    public static boolean isFlowControl     = false; //调优用, 流量控制，消息缓存
     public static boolean autoACK           = true; //调优用，自动ACK
     public static int     maxFailTime       = 4;    //调优用，重试次数
     public static int     persistThreadNum  = 1;
@@ -34,4 +34,7 @@ public class RaceConfig implements Serializable {
     public static String  TairGroup             = "group_tianchi";
     public static Integer TairNamespace         = 25469;
 
+    public static String tmallStream = "tmall";
+    public static String taobaoStream = "taobao";
+    public static String payStream = "pay";
 }
