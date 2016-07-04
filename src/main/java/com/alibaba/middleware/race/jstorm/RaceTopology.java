@@ -16,6 +16,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import sun.applet.Main;
 
+import java.io.InputStream;
+import java.util.Properties;
+
 
 /**
  * 这是一个很简单的例子
@@ -34,6 +37,11 @@ public class RaceTopology {
 
 
     public static void main(String[] args) throws Exception {
+
+        InputStream in = RaceTopology.class.getClassLoader().getResourceAsStream("application.properties");
+        Properties prop = new Properties();
+        prop.load(in);
+        PropertyConfigurator.configure(prop);
 
         Config conf = new Config();
         int spout_Parallelism_hint = 1;
