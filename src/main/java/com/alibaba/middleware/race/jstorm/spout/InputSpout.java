@@ -1,8 +1,10 @@
 package com.alibaba.middleware.race.jstorm.spout;
 
-import backtype.storm.spout.ISpout;
 import backtype.storm.spout.SpoutOutputCollector;
 import backtype.storm.task.TopologyContext;
+import backtype.storm.topology.IRichSpout;
+import backtype.storm.topology.OutputFieldsDeclarer;
+import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Values;
 import com.alibaba.jstorm.utils.JStormUtils;
 import com.alibaba.middleware.race.RaceConfig;
@@ -18,7 +20,8 @@ import com.alibaba.rocketmq.client.exception.MQClientException;
 import com.alibaba.rocketmq.common.consumer.ConsumeFromWhere;
 import com.alibaba.rocketmq.common.message.MessageExt;
 import com.alibaba.rocketmq.common.message.MessageQueue;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashSet;
 import java.util.List;
@@ -29,9 +32,9 @@ import java.util.concurrent.LinkedBlockingDeque;
 /**
  * Created by Huiyi on 2016/7/4.
  */
-public class InputSpout implements ISpout, MessageListenerConcurrently {
+public class InputSpout implements IRichSpout, MessageListenerConcurrently {
 
-    private static final Logger LOG = Logger.getLogger(InputSpout.class);
+    private static final Logger LOG = LoggerFactory.getLogger(InputSpout.class);
 
     protected SpoutOutputCollector collector;
     protected transient DefaultMQPushConsumer consumer;
@@ -40,6 +43,10 @@ public class InputSpout implements ISpout, MessageListenerConcurrently {
 
     protected transient Set<Long> tmallOrder;
     protected transient Set<Long> taobaoOrder;
+
+    public static String tmallStream = "tmall";
+    public static String taobaoStream = "taobao";
+    public static String payStream = "pay";
 
     @Override
     public void open(Map map, TopologyContext topologyContext, SpoutOutputCollector spoutOutputCollector) {
@@ -113,6 +120,9 @@ public class InputSpout implements ISpout, MessageListenerConcurrently {
 
                 // second join with orderId to determine whether its for tmall or taobao
                 sendTuple(payment);
+                LOG.debug("consuemr get pay - "+msg.getTopic()+" message [order ID: "+ payment.getOrderId()
+                        +", time: "+payment.getCreateTime()
+                        +" ￥"+payment.getPayAmount()+" ]");
             }
         } else {
             for (MessageExt msg : msgList) {
@@ -125,8 +135,12 @@ public class InputSpout implements ISpout, MessageListenerConcurrently {
                 OrderMessage order = RaceUtils.readKryoObject(OrderMessage.class, body);
                 if (topic.equals(RaceConfig.MqTaobaoTradeTopic)) {
                     taobaoOrder.add(order.getOrderId());
+                    LOG.debug("consuemr get taobao - "+msg.getTopic()+" message [order ID: "+ order.getOrderId()
+                            +" ]");
                 } else {
                     tmallOrder.add(order.getOrderId());
+                    LOG.debug("consuemr get tmall- "+msg.getTopic()+" message [order ID: "+ order.getOrderId()
+                            +" ]");
                 }
             }
         }
@@ -160,5 +174,18 @@ public class InputSpout implements ISpout, MessageListenerConcurrently {
     public void deactivate() {
         if (consumer != null)
             consumer.suspend();
+    }
+
+    @Override
+    public void declareOutputFields(OutputFieldsDeclarer declarer) {
+        //declare 3 stream
+        declarer.declareStream(taobaoStream, new Fields(taobaoStream));
+        declarer.declareStream(tmallStream, new Fields(tmallStream));
+        declarer.declareStream(payStream, new Fields(payStream));
+    }
+
+    @Override
+    public Map<String, Object> getComponentConfiguration() {
+        return null;
     }
 }

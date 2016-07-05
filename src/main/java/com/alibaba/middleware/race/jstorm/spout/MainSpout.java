@@ -8,10 +8,7 @@ import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Values;
 import com.alibaba.jstorm.utils.JStormUtils;
 import com.alibaba.middleware.race.RaceConfig;
-import com.alibaba.middleware.race.RaceUtils;
-import com.alibaba.middleware.race.jstorm.tuple.PaymentTuple;
 import com.alibaba.middleware.race.model.MsgTuple;
-import com.alibaba.middleware.race.model.PaymentMessage;
 import com.alibaba.rocketmq.client.consumer.DefaultMQPushConsumer;
 import com.alibaba.rocketmq.client.consumer.listener.ConsumeConcurrentlyContext;
 import com.alibaba.rocketmq.client.consumer.listener.ConsumeConcurrentlyStatus;
@@ -20,14 +17,14 @@ import com.alibaba.rocketmq.client.exception.MQClientException;
 import com.alibaba.rocketmq.common.consumer.ConsumeFromWhere;
 import com.alibaba.rocketmq.common.message.MessageExt;
 import com.alibaba.rocketmq.common.message.MessageQueue;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.LinkedBlockingDeque;
-import java.util.concurrent.atomic.AtomicInteger;
 
 
 /**
@@ -39,7 +36,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class MainSpout implements IRichSpout, MessageListenerConcurrently {
 
     private static final long serialVersionUID = 829732194381L;
-    private static final Logger LOG = Logger.getLogger(MainSpout.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MainSpout.class);
 
     protected boolean flowControl;  //流量控制，消息缓存与否
     protected boolean autoACK;      //是否使用默认的ACK, 后续实现ACKer
@@ -251,7 +248,7 @@ public class MainSpout implements IRichSpout, MessageListenerConcurrently {
 
         int failNum = failTimes.incrementAndGet();
         if (failNum > RaceConfig.maxFailTime) {
-            Log.warn("Message " + metaTuple.getMq() + " fail times " + failNum);
+            LOG.warn("Message " + metaTuple.getMq() + " fail times " + failNum);
             metaTuple.done();
             return;
         }

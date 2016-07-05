@@ -7,7 +7,9 @@ import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.tuple.Tuple;
 import com.alibaba.middleware.race.RaceConfig;
 import com.alibaba.middleware.race.Tair.PersistThread;
-import org.apache.log4j.Logger;
+import com.alibaba.middleware.race.Utils.Arith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -23,13 +25,13 @@ import java.util.concurrent.TimeUnit;
  */
 public class PayRatioBolt implements IRichBolt{
     private OutputCollector collector;
-    public static final Logger Log = Logger.getLogger(PayRatioBolt.class);
+    public static final Logger LOG = LoggerFactory.getLogger(PayRatioBolt.class);
 
-    public static ConcurrentHashMap<Long, Double> mobileMap = new ConcurrentHashMap<Long, Double>();
-    public static ConcurrentHashMap<Long, Double> pcMap = new ConcurrentHashMap<Long, Double>();
-    public static ConcurrentHashMap<Long, Double> ratioMap = new ConcurrentHashMap<Long, Double>();
+    private static ConcurrentHashMap<Long, Long> mobileMap = new ConcurrentHashMap<Long, Long>();
+    private static ConcurrentHashMap<Long, Long> pcMap = new ConcurrentHashMap<Long, Long>();
+    private static ConcurrentHashMap<Long, Double> ratioMap = new ConcurrentHashMap<Long, Double>();
 
-    public static ScheduledThreadPoolExecutor scheduledPersist = new ScheduledThreadPoolExecutor(RaceConfig.persistThreadNum);
+    private static ScheduledThreadPoolExecutor scheduledPersist = new ScheduledThreadPoolExecutor(RaceConfig.persistThreadNum);
 
     @Override
     public void prepare(Map map, TopologyContext topologyContext, OutputCollector outputCollector) {
@@ -42,17 +44,18 @@ public class PayRatioBolt implements IRichBolt{
     @Override
     public void execute(Tuple tuple) {
         Long minute = tuple.getLong(0);
-        Double amount = tuple.getDouble(1);
+        Long amount = tuple.getLong(1);
         Short platform = tuple.getShort(2);
 
+        LOG.debug("PayRatioBolt get [min: "+minute+", ￥"+amount+", platform: "+platform+"]");
         //pc
         if(platform == 0){
-          Double pcAmount = pcMap.get(minute);
+            Long pcAmount = pcMap.get(minute);
             if (pcAmount == null){
 
                 //上一分钟的历史交易额作为起点
                 if(( pcAmount = pcMap.get(minute - 60)) == null) {
-                    pcAmount = 0.0;
+                    pcAmount = 0L;
                 }
             }
 
@@ -60,19 +63,20 @@ public class PayRatioBolt implements IRichBolt{
             pcMap.put(minute, pcAmount);
 
             //计算比值
-            Double mobileAmount = mobileMap.get(minute);
+            Long mobileAmount = mobileMap.get(minute);
             if (mobileAmount == null)
-                mobileAmount = 0.0;
-            ratioMap.put(minute, mobileAmount / pcAmount);
+                mobileAmount = 0L;
+            double ratio = Arith.div(mobileAmount*1.0, pcAmount*1.0, 2);//精确除法,保留2位
+            ratioMap.put(minute,ratio);
 
         }else{
             //无线端交易
-            Double mobileAmount = mobileMap.get(minute);
+            Long mobileAmount = mobileMap.get(minute);
             if (mobileAmount == null){
 
                 //上一分钟的历史交易额作为起点
                 if(( mobileAmount = mobileMap.get(minute - 60)) == null) {
-                    mobileAmount = 0.0;
+                    mobileAmount = 0L;
                 }
             }
 
@@ -80,10 +84,10 @@ public class PayRatioBolt implements IRichBolt{
             mobileMap.put(minute, mobileAmount);
 
             //计算比值
-            Double pcAmount = pcMap.get(minute);
+            Long pcAmount = pcMap.get(minute);
             Double ratio = Double.MAX_VALUE; //pc 端为 0， 比值无限大
             if (pcAmount != null) {
-                ratio = mobileAmount / pcAmount;
+                ratio = Arith.div(mobileAmount*1.0, pcAmount*1.0, 2);//精确除法,保留2位
             }
 
             ratioMap.put(minute, ratio);
