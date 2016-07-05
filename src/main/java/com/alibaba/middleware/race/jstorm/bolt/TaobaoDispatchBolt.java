@@ -43,8 +43,6 @@ public class TaobaoDispatchBolt implements IRichBolt{
         short platform = tuple.getShort(3);
         long createTime = tuple.getLong(4);
 
-        Log.debug("TaobaoDispatchBolt get [order ID: "+ orderId +", time: "+createTime
-                +" ￥"+payAmount+" ]");
         //同一个订单，不同的payment的hashcode (hint: 生产数据payAmount小于100， 扩大paySource 与 platform比重, 不保证绝对正确
         long hashCode = payAmount | (paySource << 10) | (platform << 11) | createTime;
 
@@ -53,8 +51,6 @@ public class TaobaoDispatchBolt implements IRichBolt{
         if(existOrder == null || existOrder != hashCode){
             collector.emit(new Values(createTime, payAmount));
             uniqueMap.put(orderId, hashCode);
-            Log.debug("TaobaoDispatchBolt emit [order ID: "+ orderId +", time: "+createTime
-                    +" ￥"+payAmount+" ]");
         }
 
         collector.ack(tuple);

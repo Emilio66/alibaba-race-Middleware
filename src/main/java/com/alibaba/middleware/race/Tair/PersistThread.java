@@ -13,7 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class PersistThread implements Runnable {
     private String prefix;
     private ConcurrentHashMap<Long, Double> hashMap;
-    public static Logger Log = Logger.getLogger(PersistThread.class);
+    private static Logger Log = Logger.getLogger(PersistThread.class);
     public PersistThread(String prefix, ConcurrentHashMap<Long, Double> hashMap){
         this.prefix = prefix;
         this.hashMap = hashMap;
@@ -29,7 +29,7 @@ public class PersistThread implements Runnable {
             Long key = entry.getKey();
             Double value = entry.getValue();
 
-            Log.debug(key + " : " + value);         //log
+            //Log.debug(key + " : " + value);         //log
             tairOperator.write(prefix +"_"+ key, value);   //persist
         }
     }
