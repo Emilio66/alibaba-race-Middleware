@@ -120,6 +120,9 @@ public class InputSpout implements IRichSpout, MessageListenerConcurrently {
 
                 // second join with orderId to determine whether its for tmall or taobao
                 sendTuple(payment);
+                LOG.debug("consuemr get pay - "+msg.getTopic()+" message [order ID: "+ payment.getOrderId()
+                        +", time: "+payment.getCreateTime()
+                        +" ￥"+payment.getPayAmount()+" ]");
             }
         } else {
             for (MessageExt msg : msgList) {
@@ -132,8 +135,12 @@ public class InputSpout implements IRichSpout, MessageListenerConcurrently {
                 OrderMessage order = RaceUtils.readKryoObject(OrderMessage.class, body);
                 if (topic.equals(RaceConfig.MqTaobaoTradeTopic)) {
                     taobaoOrder.add(order.getOrderId());
+                    LOG.debug("consuemr get taobao - "+msg.getTopic()+" message [order ID: "+ order.getOrderId()
+                            +" ]");
                 } else {
                     tmallOrder.add(order.getOrderId());
+                    LOG.debug("consuemr get tmall- "+msg.getTopic()+" message [order ID: "+ order.getOrderId()
+                            +" ]");
                 }
             }
         }

@@ -15,6 +15,7 @@ import org.apache.log4j.Logger;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Created by zhaoz on 2016/7/3.
@@ -22,7 +23,7 @@ import java.util.Map;
 public class PayDispatchBolt implements IRichBolt{
     private OutputCollector collector;
     private static final Logger Log = Logger.getLogger(PayDispatchBolt.class);
-    protected transient HashMap<Long, Long> uniqueMap;
+    private static ConcurrentHashMap<Long, Long> uniqueMap= new ConcurrentHashMap<Long, Long>(1024);;
 
     @Override
     public void prepare(Map map, TopologyContext topologyContext, OutputCollector outputCollector) {
@@ -38,6 +39,8 @@ public class PayDispatchBolt implements IRichBolt{
         short platform = tuple.getShort(3);
         long createTime = tuple.getLong(4);
 
+        Log.debug("PayDispatchBolt get [order ID: "+ orderId +", time: "+createTime
+                +" ￥"+payAmount+" ]");
         //同一个订单，不同的payment的hashcode (hint: 生产数据payAmount小于100， 扩大paySource 与 platform比重, 不保证绝对正确
         long hashCode = payAmount | (paySource << 10) | (platform << 11) | createTime;
 
@@ -46,6 +49,8 @@ public class PayDispatchBolt implements IRichBolt{
         if(existOrder == null || existOrder != hashCode){
             collector.emit(new Values(createTime, payAmount, platform));
             uniqueMap.put(orderId, hashCode);
+            Log.debug("PayDispatchBolt emit [order ID: "+ orderId +", time: "+createTime
+                    +" ￥"+payAmount+" ]");
         }
         /*MsgTuple msgTuple = (MsgTuple) tuple;
 

@@ -26,11 +26,11 @@ public class PayRatioBolt implements IRichBolt{
     private OutputCollector collector;
     public static final Logger Log = Logger.getLogger(PayRatioBolt.class);
 
-    public static ConcurrentHashMap<Long, Long> mobileMap = new ConcurrentHashMap<Long, Long>();
-    public static ConcurrentHashMap<Long, Long> pcMap = new ConcurrentHashMap<Long, Long>();
-    public static ConcurrentHashMap<Long, Double> ratioMap = new ConcurrentHashMap<Long, Double>();
+    private static ConcurrentHashMap<Long, Long> mobileMap = new ConcurrentHashMap<Long, Long>();
+    private static ConcurrentHashMap<Long, Long> pcMap = new ConcurrentHashMap<Long, Long>();
+    private static ConcurrentHashMap<Long, Double> ratioMap = new ConcurrentHashMap<Long, Double>();
 
-    public static ScheduledThreadPoolExecutor scheduledPersist = new ScheduledThreadPoolExecutor(RaceConfig.persistThreadNum);
+    private static ScheduledThreadPoolExecutor scheduledPersist = new ScheduledThreadPoolExecutor(RaceConfig.persistThreadNum);
 
     @Override
     public void prepare(Map map, TopologyContext topologyContext, OutputCollector outputCollector) {
@@ -46,6 +46,7 @@ public class PayRatioBolt implements IRichBolt{
         Long amount = tuple.getLong(1);
         Short platform = tuple.getShort(2);
 
+        Log.debug("PayRatioBolt get [min: "+minute+", ￥"+amount+", platform: "+platform+"]");
         //pc
         if(platform == 0){
             Long pcAmount = pcMap.get(minute);

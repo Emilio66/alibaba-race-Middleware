@@ -20,9 +20,9 @@ import java.util.concurrent.TimeUnit;
  */
 public class TaobaoCountBolt implements IRichBolt{
     private OutputCollector collector;
-    public static final Logger Log = Logger.getLogger(TmallCountBolt.class);
-    public static ConcurrentHashMap<Long, Double> hashMap = new ConcurrentHashMap<Long, Double>(); //计数表
-    public static ScheduledThreadPoolExecutor scheduledPersist = new ScheduledThreadPoolExecutor(RaceConfig.persistThreadNum);
+    private static final Logger Log = Logger.getLogger(TmallCountBolt.class);
+    private static ConcurrentHashMap<Long, Double> hashMap = new ConcurrentHashMap<Long, Double>(); //计数表
+    private static ScheduledThreadPoolExecutor scheduledPersist = new ScheduledThreadPoolExecutor(RaceConfig.persistThreadNum);
 
     @Override
     public void prepare(Map map, TopologyContext topologyContext, OutputCollector outputCollector) {
@@ -40,8 +40,10 @@ public class TaobaoCountBolt implements IRichBolt{
         if (currentMoney == null)
             currentMoney = 0.0;
         currentMoney += price;  //累加金额
-        //保留两位小数
-        Arith.round(currentMoney, 2);
+        //保留两位小数 （暂时去掉
+       // currentMoney = Arith.round(currentMoney, 2);
+
+        Log.debug("TaobaoCountBolt get [min: "+minute+", ￥"+price+", current sum ￥ "+currentMoney+"]");
         hashMap.put(minute, currentMoney);
 
         collector.ack(tuple);

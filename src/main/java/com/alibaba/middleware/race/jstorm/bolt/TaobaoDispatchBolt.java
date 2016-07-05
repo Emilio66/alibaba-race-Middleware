@@ -26,13 +26,12 @@ import java.util.concurrent.ConcurrentHashMap;
 public class TaobaoDispatchBolt implements IRichBolt{
     private OutputCollector collector;
     private static final Logger Log = Logger.getLogger(TaobaoDispatchBolt.class);
-
-    protected transient HashMap<Long, Long> uniqueMap;
+    //每个orderID都存，数据量大可用 bloomfilter
+    private static ConcurrentHashMap<Long, Long> uniqueMap= new ConcurrentHashMap<Long, Long>(1024);
 
     @Override
     public void prepare(Map map, TopologyContext topologyContext, OutputCollector outputCollector) {
         this.collector = outputCollector;
-        uniqueMap = new HashMap<Long, Long>(1024); //每个orderID都存，数据量大可用 bloomfilter
     }
 
     @Override
@@ -44,6 +43,8 @@ public class TaobaoDispatchBolt implements IRichBolt{
         short platform = tuple.getShort(3);
         long createTime = tuple.getLong(4);
 
+        Log.debug("TaobaoDispatchBolt get [order ID: "+ orderId +", time: "+createTime
+                +" ￥"+payAmount+" ]");
         //同一个订单，不同的payment的hashcode (hint: 生产数据payAmount小于100， 扩大paySource 与 platform比重, 不保证绝对正确
         long hashCode = payAmount | (paySource << 10) | (platform << 11) | createTime;
 
@@ -52,28 +53,10 @@ public class TaobaoDispatchBolt implements IRichBolt{
         if(existOrder == null || existOrder != hashCode){
             collector.emit(new Values(createTime, payAmount));
             uniqueMap.put(orderId, hashCode);
+            Log.debug("TaobaoDispatchBolt emit [order ID: "+ orderId +", time: "+createTime
+                    +" ￥"+payAmount+" ]");
         }
-       /* MsgTuple msgTuple = (MsgTuple) tuple;
 
-        //处理每条消息, 同一分钟的消息派发到同一个task（线程）当中
-        for (MessageExt msg : msgTuple.getMsgList()) {
-            byte[] body = msg.getBody();
-
-            if (body.length == 2 && body[0] == 0 && body[1] == 0) {
-                Log.info("Got the end signal of Taobao message queue");
-                continue;
-            }
-
-            OrderMessage orderMessage = RaceUtils.readKryoObject(OrderMessage.class, body);
-
-            //只需要订单时间和金额，后续可能需要 orderID 来去重？
-            double price = orderMessage.getTotalPrice();
-            long second = orderMessage.getCreateTime() / 1000;
-            long minute = (second / 60) * 60;   //以第0秒作为这一分钟的标识，10位
-
-            collector.emit(new Values(minute, price));
-        }
-*/
         collector.ack(tuple);
     }
 

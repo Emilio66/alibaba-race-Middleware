@@ -9,8 +9,7 @@ import com.alibaba.middleware.race.RaceConfig;
 import com.alibaba.middleware.race.jstorm.bolt.*;
 import com.alibaba.middleware.race.jstorm.spout.InputSpout;
 import org.apache.log4j.PropertyConfigurator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.log4j.Logger;
 
 import java.io.InputStream;
 import java.util.Properties;
@@ -29,7 +28,7 @@ import java.util.Properties;
  */
 public class RaceTopology {
 
-    private static Logger LOG = LoggerFactory.getLogger(RaceTopology.class);
+    private static Logger LOG = Logger.getLogger(RaceTopology.class);
 
 
     public static void main(String[] args) throws Exception {
@@ -63,6 +62,7 @@ public class RaceTopology {
         try {
             String topologyName = RaceConfig.JstormTopologyName;
             StormSubmitter.submitTopology(topologyName, conf, builder.createTopology());
+            LOG.debug("Succesfully start topology with config: "+conf);
         } catch (Exception e) {
             LOG.info("Submit topology error!!", e);
             e.printStackTrace();
