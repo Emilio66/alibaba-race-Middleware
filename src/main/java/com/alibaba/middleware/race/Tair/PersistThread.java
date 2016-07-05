@@ -1,7 +1,7 @@
 package com.alibaba.middleware.race.Tair;
 
 import com.alibaba.middleware.race.RaceConfig;
-import org.slf4j.Logger;
+import org.apache.log4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Map;
@@ -15,7 +15,7 @@ public class PersistThread implements Runnable {
 
     private String prefix;
     private ConcurrentHashMap<Long, Double> hashMap;
-    private static Logger LOG = LoggerFactory.getLogger(PersistThread.class);
+    private static Logger LOG = Logger.getLogger(PersistThread.class);
     public PersistThread(String prefix, ConcurrentHashMap<Long, Double> hashMap){
         this.prefix = prefix;
         this.hashMap = hashMap;

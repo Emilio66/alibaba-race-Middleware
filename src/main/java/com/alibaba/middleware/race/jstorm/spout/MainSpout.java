@@ -17,7 +17,7 @@ import com.alibaba.rocketmq.client.exception.MQClientException;
 import com.alibaba.rocketmq.common.consumer.ConsumeFromWhere;
 import com.alibaba.rocketmq.common.message.MessageExt;
 import com.alibaba.rocketmq.common.message.MessageQueue;
-import org.slf4j.Logger;
+import org.apache.log4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.HashSet;
@@ -36,7 +36,7 @@ import java.util.concurrent.LinkedBlockingDeque;
 public class MainSpout implements IRichSpout, MessageListenerConcurrently {
 
     private static final long serialVersionUID = 829732194381L;
-    private static final Logger LOG = LoggerFactory.getLogger(MainSpout.class);
+    private static final Logger LOG = Logger.getLogger(MainSpout.class);
 
     protected boolean flowControl;  //流量控制，消息缓存与否
     protected boolean autoACK;      //是否使用默认的ACK, 后续实现ACKer

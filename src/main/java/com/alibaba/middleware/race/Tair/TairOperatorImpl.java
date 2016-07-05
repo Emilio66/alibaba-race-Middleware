@@ -2,7 +2,7 @@ package com.alibaba.middleware.race.Tair;
 
 import com.alibaba.middleware.race.RaceConfig;
 import java.io.Serializable;
-import org.slf4j.Logger;
+import org.apache.log4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory;
  */
 public class TairOperatorImpl {
 
-    public static Logger LOG = LoggerFactory.getLogger(TairOperatorImpl.class);
+    public static Logger LOG = Logger.getLogger(TairOperatorImpl.class);
     public TairOperatorImpl(String masterConfigServer,
                             String slaveConfigServer,
                             String groupName,

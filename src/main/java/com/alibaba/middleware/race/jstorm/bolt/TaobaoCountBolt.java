@@ -7,7 +7,7 @@ import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.tuple.Tuple;
 import com.alibaba.middleware.race.RaceConfig;
 import com.alibaba.middleware.race.Tair.PersistThread;
-import org.slf4j.Logger;
+import org.apache.log4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Map;
@@ -20,7 +20,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class TaobaoCountBolt implements IRichBolt{
     private OutputCollector collector;
-    private static final Logger LOG = LoggerFactory.getLogger(TmallCountBolt.class);
+    private static final Logger LOG = Logger.getLogger(TmallCountBolt.class);
     private static ConcurrentHashMap<Long, Double> hashMap = new ConcurrentHashMap<Long, Double>(); //计数表
     private static ScheduledThreadPoolExecutor scheduledPersist = new ScheduledThreadPoolExecutor(RaceConfig.persistThreadNum);
 

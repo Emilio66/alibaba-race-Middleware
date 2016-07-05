@@ -8,7 +8,7 @@ import backtype.storm.tuple.Tuple;
 import com.alibaba.middleware.race.RaceConfig;
 import com.alibaba.middleware.race.Tair.PersistThread;
 import com.alibaba.middleware.race.Utils.Arith;
-import org.slf4j.Logger;
+import org.apache.log4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Map;
@@ -25,7 +25,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class PayRatioBolt implements IRichBolt{
     private OutputCollector collector;
-    public static final Logger LOG = LoggerFactory.getLogger(PayRatioBolt.class);
+    public static final Logger LOG = Logger.getLogger(PayRatioBolt.class);
 
     private static ConcurrentHashMap<Long, Long> mobileMap = new ConcurrentHashMap<Long, Long>();
     private static ConcurrentHashMap<Long, Long> pcMap = new ConcurrentHashMap<Long, Long>();

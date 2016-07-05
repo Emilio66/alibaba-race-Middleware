@@ -9,7 +9,7 @@ import com.alibaba.middleware.race.RaceConfig;
 import com.alibaba.middleware.race.Tair.PersistThread;
 import com.alibaba.middleware.race.Tair.TairOperatorImpl;
 import com.alibaba.middleware.race.Utils.Arith;
-import org.slf4j.Logger;
+import org.apache.log4j.Logger;
 import org.slf4j.LoggerFactory;
 import sun.rmi.runtime.Log;
 
@@ -24,7 +24,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class TmallCountBolt implements IRichBolt {
     private OutputCollector collector;
-    private static final Logger LOG = LoggerFactory.getLogger(TmallCountBolt.class);
+    private static final Logger LOG = Logger.getLogger(TmallCountBolt.class);
     private static ConcurrentHashMap<Long, Double> hashMap = new ConcurrentHashMap<Long, Double>(); //计数表
     private static ScheduledThreadPoolExecutor scheduledPersist = new ScheduledThreadPoolExecutor(RaceConfig.persistThreadNum);//定时存入Tair
 

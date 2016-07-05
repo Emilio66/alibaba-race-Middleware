@@ -7,7 +7,7 @@ import backtype.storm.tuple.Fields;
 import com.alibaba.middleware.race.RaceConfig;
 import com.alibaba.middleware.race.jstorm.bolt.*;
 import com.alibaba.middleware.race.jstorm.spout.InputSpout;
-import org.slf4j.Logger;
+import org.apache.log4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
@@ -24,7 +24,7 @@ import org.slf4j.LoggerFactory;
  */
 public class RaceTopology {
 
-    private static Logger LOG = LoggerFactory.getLogger(RaceTopology.class);
+    private static Logger LOG = Logger.getLogger(RaceTopology.class);
 
 
     public static void main(String[] args) throws Exception {
