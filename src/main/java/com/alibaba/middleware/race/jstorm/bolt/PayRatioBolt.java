@@ -8,7 +8,8 @@ import backtype.storm.tuple.Tuple;
 import com.alibaba.middleware.race.RaceConfig;
 import com.alibaba.middleware.race.Tair.PersistThread;
 import com.alibaba.middleware.race.Utils.Arith;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -24,7 +25,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class PayRatioBolt implements IRichBolt{
     private OutputCollector collector;
-    public static final Logger Log = Logger.getLogger(PayRatioBolt.class);
+    public static final Logger LOG = LoggerFactory.getLogger(PayRatioBolt.class);
 
     private static ConcurrentHashMap<Long, Long> mobileMap = new ConcurrentHashMap<Long, Long>();
     private static ConcurrentHashMap<Long, Long> pcMap = new ConcurrentHashMap<Long, Long>();
@@ -46,7 +47,7 @@ public class PayRatioBolt implements IRichBolt{
         Long amount = tuple.getLong(1);
         Short platform = tuple.getShort(2);
 
-        Log.debug("PayRatioBolt get [min: "+minute+", ￥"+amount+", platform: "+platform+"]");
+        LOG.debug("PayRatioBolt get [min: "+minute+", ￥"+amount+", platform: "+platform+"]");
         //pc
         if(platform == 0){
             Long pcAmount = pcMap.get(minute);

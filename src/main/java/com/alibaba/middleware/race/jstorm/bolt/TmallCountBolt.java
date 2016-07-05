@@ -9,7 +9,8 @@ import com.alibaba.middleware.race.RaceConfig;
 import com.alibaba.middleware.race.Tair.PersistThread;
 import com.alibaba.middleware.race.Tair.TairOperatorImpl;
 import com.alibaba.middleware.race.Utils.Arith;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import sun.rmi.runtime.Log;
 
 import java.util.Map;
@@ -23,7 +24,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class TmallCountBolt implements IRichBolt {
     private OutputCollector collector;
-    private static final Logger Log = Logger.getLogger(TmallCountBolt.class);
+    private static final Logger LOG = LoggerFactory.getLogger(TmallCountBolt.class);
     private static ConcurrentHashMap<Long, Double> hashMap = new ConcurrentHashMap<Long, Double>(); //计数表
     private static ScheduledThreadPoolExecutor scheduledPersist = new ScheduledThreadPoolExecutor(RaceConfig.persistThreadNum);//定时存入Tair
 
@@ -47,7 +48,7 @@ public class TmallCountBolt implements IRichBolt {
         //currentMoney = Arith.round(currentMoney, 2);
         hashMap.put(minute, currentMoney);
 
-        Log.debug("TaobaoCountBolt get [min: "+minute+", ￥"+price+", current sum ￥ "+currentMoney+"]");
+        LOG.debug("TaobaoCountBolt get [min: "+minute+", ￥"+price+", current sum ￥ "+currentMoney+"]");
         collector.ack(tuple);
     }
 

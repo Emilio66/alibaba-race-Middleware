@@ -1,7 +1,8 @@
 package com.alibaba.middleware.race.Tair;
 
 import com.alibaba.middleware.race.RaceConfig;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -11,9 +12,10 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 //线程： 把数据存入tair
 public class PersistThread implements Runnable {
+
     private String prefix;
     private ConcurrentHashMap<Long, Double> hashMap;
-    private static Logger Log = Logger.getLogger(PersistThread.class);
+    private static Logger LOG = LoggerFactory.getLogger(PersistThread.class);
     public PersistThread(String prefix, ConcurrentHashMap<Long, Double> hashMap){
         this.prefix = prefix;
         this.hashMap = hashMap;
@@ -29,7 +31,7 @@ public class PersistThread implements Runnable {
             Long key = entry.getKey();
             Double value = entry.getValue();
 
-            //Log.debug(key + " : " + value);         //log
+            //LOG.debug(key + " : " + value);         //log
             tairOperator.write(prefix +"_"+ key, value);   //persist
         }
     }

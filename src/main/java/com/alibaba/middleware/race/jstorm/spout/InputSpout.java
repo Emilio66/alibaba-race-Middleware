@@ -1,6 +1,5 @@
 package com.alibaba.middleware.race.jstorm.spout;
 
-import backtype.storm.spout.ISpout;
 import backtype.storm.spout.SpoutOutputCollector;
 import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.IRichSpout;
@@ -21,7 +20,8 @@ import com.alibaba.rocketmq.client.exception.MQClientException;
 import com.alibaba.rocketmq.common.consumer.ConsumeFromWhere;
 import com.alibaba.rocketmq.common.message.MessageExt;
 import com.alibaba.rocketmq.common.message.MessageQueue;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashSet;
 import java.util.List;
@@ -34,7 +34,7 @@ import java.util.concurrent.LinkedBlockingDeque;
  */
 public class InputSpout implements IRichSpout, MessageListenerConcurrently {
 
-    private static final Logger LOG = Logger.getLogger(InputSpout.class);
+    private static final Logger LOG = LoggerFactory.getLogger(InputSpout.class);
 
     protected SpoutOutputCollector collector;
     protected transient DefaultMQPushConsumer consumer;

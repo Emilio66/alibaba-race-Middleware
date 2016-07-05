@@ -4,15 +4,11 @@ import backtype.storm.Config;
 import backtype.storm.StormSubmitter;
 import backtype.storm.topology.TopologyBuilder;
 import backtype.storm.tuple.Fields;
-//import com.alibaba.middleware.race.RaceConfig;
 import com.alibaba.middleware.race.RaceConfig;
 import com.alibaba.middleware.race.jstorm.bolt.*;
 import com.alibaba.middleware.race.jstorm.spout.InputSpout;
-import org.apache.log4j.PropertyConfigurator;
-import org.apache.log4j.Logger;
-
-import java.io.InputStream;
-import java.util.Properties;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -28,7 +24,7 @@ import java.util.Properties;
  */
 public class RaceTopology {
 
-    private static Logger LOG = Logger.getLogger(RaceTopology.class);
+    private static Logger LOG = LoggerFactory.getLogger(RaceTopology.class);
 
 
     public static void main(String[] args) throws Exception {
