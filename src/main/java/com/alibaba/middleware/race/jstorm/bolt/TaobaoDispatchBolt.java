@@ -7,14 +7,9 @@ import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
-import com.alibaba.middleware.race.RaceUtils;
-import com.alibaba.middleware.race.model.MsgTuple;
-import com.alibaba.middleware.race.model.OrderMessage;
-import com.alibaba.rocketmq.common.message.MessageExt;
 import org.apache.log4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -25,7 +20,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class TaobaoDispatchBolt implements IRichBolt{
     private OutputCollector collector;
-    private static final Logger Log = Logger.getLogger(TaobaoDispatchBolt.class);
+    private static final Logger LOG = Logger.getLogger(TaobaoDispatchBolt.class);
     //每个orderID都存，数据量大可用 bloomfilter
     private static ConcurrentHashMap<Long, Long> uniqueMap= new ConcurrentHashMap<Long, Long>(1024);
 

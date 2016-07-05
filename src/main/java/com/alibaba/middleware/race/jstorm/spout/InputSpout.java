@@ -1,6 +1,5 @@
 package com.alibaba.middleware.race.jstorm.spout;
 
-import backtype.storm.spout.ISpout;
 import backtype.storm.spout.SpoutOutputCollector;
 import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.IRichSpout;
@@ -22,6 +21,7 @@ import com.alibaba.rocketmq.common.consumer.ConsumeFromWhere;
 import com.alibaba.rocketmq.common.message.MessageExt;
 import com.alibaba.rocketmq.common.message.MessageQueue;
 import org.apache.log4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashSet;
 import java.util.List;
@@ -101,8 +101,15 @@ public class InputSpout implements IRichSpout, MessageListenerConcurrently {
 
     @Override
     public ConsumeConcurrentlyStatus consumeMessage(List<MessageExt> msgList, ConsumeConcurrentlyContext context) {
+
         MessageQueue queue = context.getMessageQueue();
         String topic = queue.getTopic();
+        LOG.info("enter consumeMessage()");
+        LOG.info("topic is: " + topic);
+        LOG.info("msg size is: " + msgList.size());
+        for (MessageExt msg: msgList) {
+            LOG.info(RaceUtils.readKryoObject(PaymentMessage.class, msg.getBody()).toString());
+        }
 
         if (topic.equals(RaceConfig.MqPayTopic)) {
             for (MessageExt msg : msgList) {

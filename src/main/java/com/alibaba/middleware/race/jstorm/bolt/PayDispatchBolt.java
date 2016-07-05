@@ -7,13 +7,9 @@ import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
-import com.alibaba.middleware.race.RaceUtils;
-import com.alibaba.middleware.race.model.MsgTuple;
-import com.alibaba.middleware.race.model.PaymentMessage;
-import com.alibaba.rocketmq.common.message.MessageExt;
 import org.apache.log4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -22,7 +18,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class PayDispatchBolt implements IRichBolt{
     private OutputCollector collector;
-    private static final Logger Log = Logger.getLogger(PayDispatchBolt.class);
+    private static final Logger LOG = Logger.getLogger(PayDispatchBolt.class);
     private static ConcurrentHashMap<Long, Long> uniqueMap= new ConcurrentHashMap<Long, Long>(1024);;
 
     @Override
@@ -39,7 +35,7 @@ public class PayDispatchBolt implements IRichBolt{
         short platform = tuple.getShort(3);
         long createTime = tuple.getLong(4);
 
-        Log.debug("PayDispatchBolt get [order ID: "+ orderId +", time: "+createTime
+        LOG.debug("PayDispatchBolt get [order ID: "+ orderId +", time: "+createTime
                 +" ￥"+payAmount+" ]");
         //同一个订单，不同的payment的hashcode (hint: 生产数据payAmount小于100， 扩大paySource 与 platform比重, 不保证绝对正确
         long hashCode = payAmount | (paySource << 10) | (platform << 11) | createTime;
@@ -49,7 +45,7 @@ public class PayDispatchBolt implements IRichBolt{
         if(existOrder == null || existOrder != hashCode){
             collector.emit(new Values(createTime, payAmount, platform));
             uniqueMap.put(orderId, hashCode);
-            Log.debug("PayDispatchBolt emit [order ID: "+ orderId +", time: "+createTime
+            LOG.debug("PayDispatchBolt emit [order ID: "+ orderId +", time: "+createTime
                     +" ￥"+payAmount+" ]");
         }
         /*MsgTuple msgTuple = (MsgTuple) tuple;
@@ -59,7 +55,7 @@ public class PayDispatchBolt implements IRichBolt{
             byte[] body = msg.getBody();
 
             if (body.length == 2 && body[0] == 0 && body[1] == 0) {
-                Log.info("Got the end signal of Payment message queue");
+                LOG.info("Got the end signal of Payment message queue");
                 continue;
             }
 
