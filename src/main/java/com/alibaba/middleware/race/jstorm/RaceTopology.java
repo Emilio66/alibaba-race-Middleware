@@ -42,19 +42,19 @@ public class RaceTopology {
         //builder.setBolt("tmallDispatch", new TmallDispatchBolt(), dispatch_Parallelism_hint).
           //      localOrShuffleGrouping("source", InputSpout.tmallStream);    //different stream
         builder.setBolt("tmallCount", new TmallCountBolt(), count_Parallelism_hint).
-                fieldsGrouping("source", new Fields("createTime"));
+                fieldsGrouping("source",InputSpout.tmallStream, new Fields("createTime"));
 
         //taobao data process
         //builder.setBolt("taobaoDispatch", new TaobaoDispatchBolt(), dispatch_Parallelism_hint).
           //      localOrShuffleGrouping("source", InputSpout.taobaoStream);
         builder.setBolt("taobaoCount", new TaobaoCountBolt(), count_Parallelism_hint).
-                fieldsGrouping("source", new Fields("createTime"));
+                fieldsGrouping("source", InputSpout.taobaoStream, new Fields("createTime"));
 
         //pay ratio process
         //builder.setBolt("payDispatch", new PayDispatchBolt(), dispatch_Parallelism_hint).
           //      localOrShuffleGrouping("source", InputSpout.payStream);
         builder.setBolt("payRatioCount", new PayRatioBolt(), count_Parallelism_hint).
-                fieldsGrouping("source", new Fields("createTime"));
+                fieldsGrouping("source", InputSpout.payStream, new Fields("createTime"));
         try {
             String topologyName = RaceConfig.JstormTopologyName;
             StormSubmitter.submitTopology(topologyName, conf, builder.createTopology());
