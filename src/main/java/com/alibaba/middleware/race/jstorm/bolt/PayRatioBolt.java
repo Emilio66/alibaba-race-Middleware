@@ -10,6 +10,7 @@ import com.alibaba.middleware.race.Tair.PersistThread;
 import com.alibaba.middleware.race.Utils.Arith;
 import com.alibaba.middleware.race.jstorm.tuple.PaymentTuple;
 import org.apache.log4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -28,7 +29,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class PayRatioBolt implements IRichBolt {
     private OutputCollector collector;
-    public static final Logger Log = Logger.getLogger(PayRatioBolt.class);
+    public static final Logger LOG = Logger.getLogger(PayRatioBolt.class);
 
     private static HashMap<Long, Long> mobileMap = new HashMap<Long, Long>(); //no need for concurrent hashMap
     private static HashMap<Long, Long> pcMap = new HashMap<Long, Long>();   //calculate in place
@@ -51,6 +52,7 @@ public class PayRatioBolt implements IRichBolt {
      */
     @Override
     public void execute(Tuple tuple) {
+
         //按照field 顺序得到payment 内容
         long orderId = tuple.getLong(0);
         long payAmount = tuple.getLong(1);
@@ -58,7 +60,7 @@ public class PayRatioBolt implements IRichBolt {
         short platform = tuple.getShort(3);
         long createTime = tuple.getLong(4);
 
-        Log.debug("PayRatioBolt get [order ID: " + orderId + ", time: " + createTime
+        LOG.debug("PayRatioBolt get [order ID: " + orderId + ", time: " + createTime
                 + " ￥" + payAmount + " ]");
 
         //判重
@@ -74,6 +76,7 @@ public class PayRatioBolt implements IRichBolt {
                     if ((pcAmount = pcMap.get(createTime - 60)) == null) {
                         pcAmount = 0L;
                     }
+
                 }
 
                 pcAmount += payAmount; //加上历史交易作为总交易额

@@ -3,6 +3,7 @@ package com.alibaba.middleware.race.Tair;
 import com.alibaba.middleware.race.RaceConfig;
 import java.io.Serializable;
 import org.apache.log4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 读写tair所需要的集群信息，如masterConfigServer/slaveConfigServer地址/
@@ -10,17 +11,17 @@ import org.apache.log4j.Logger;
  */
 public class TairOperatorImpl {
 
-    public static Logger Log = Logger.getLogger(TairOperatorImpl.class);
+    public static Logger LOG = Logger.getLogger(TairOperatorImpl.class);
     public TairOperatorImpl(String masterConfigServer,
                             String slaveConfigServer,
                             String groupName,
                             int namespace) {
-        Log.debug(" new tair operator "+masterConfigServer+", "+slaveConfigServer
+        LOG.debug(" new tair operator "+masterConfigServer+", "+slaveConfigServer
                 +", "+groupName+", namespace"+namespace);
     }
 
     public boolean write(Serializable key, Serializable value) {
-        Log.debug("write data [ "+key+" : "+value+" ]");
+        LOG.debug("write data [ "+key+" : "+value+" ]");
         return false;
     }
 

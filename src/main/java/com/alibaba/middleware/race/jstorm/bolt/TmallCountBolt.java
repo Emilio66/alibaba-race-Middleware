@@ -11,6 +11,7 @@ import com.alibaba.middleware.race.Tair.TairOperatorImpl;
 import com.alibaba.middleware.race.Utils.Arith;
 import com.alibaba.middleware.race.jstorm.tuple.PaymentTuple;
 import org.apache.log4j.Logger;
+import org.slf4j.LoggerFactory;
 import sun.rmi.runtime.Log;
 
 import java.util.HashMap;

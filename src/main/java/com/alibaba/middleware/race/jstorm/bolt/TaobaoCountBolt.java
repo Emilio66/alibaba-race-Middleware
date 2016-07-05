@@ -10,6 +10,7 @@ import com.alibaba.middleware.race.Tair.PersistThread;
 import com.alibaba.middleware.race.Utils.Arith;
 import com.alibaba.middleware.race.jstorm.tuple.PaymentTuple;
 import org.apache.log4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.HashSet;
