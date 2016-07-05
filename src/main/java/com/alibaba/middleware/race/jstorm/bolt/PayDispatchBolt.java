@@ -13,6 +13,7 @@ import com.alibaba.middleware.race.model.PaymentMessage;
 import com.alibaba.rocketmq.common.message.MessageExt;
 import org.apache.log4j.Logger;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -21,6 +22,7 @@ import java.util.Map;
 public class PayDispatchBolt implements IRichBolt{
     private OutputCollector collector;
     private static final Logger Log = Logger.getLogger(PayDispatchBolt.class);
+    protected transient HashMap<Long, Long> uniqueMap;
 
     @Override
     public void prepare(Map map, TopologyContext topologyContext, OutputCollector outputCollector) {
@@ -29,7 +31,23 @@ public class PayDispatchBolt implements IRichBolt{
 
     @Override
     public void execute(Tuple tuple) {
-        MsgTuple msgTuple = (MsgTuple) tuple;
+        //按照field 顺序得到payment 内容
+        long orderId = tuple.getLong(0);
+        long payAmount = tuple.getLong(1);
+        short paySource = tuple.getShort(2);
+        short platform = tuple.getShort(3);
+        long createTime = tuple.getLong(4);
+
+        //同一个订单，不同的payment的hashcode (hint: 生产数据payAmount小于100， 扩大paySource 与 platform比重, 不保证绝对正确
+        long hashCode = payAmount | (paySource << 10) | (platform << 11) | createTime;
+
+        //去重
+        Long existOrder = uniqueMap.get(orderId);
+        if(existOrder == null || existOrder != hashCode){
+            collector.emit(new Values(createTime, payAmount, platform));
+            uniqueMap.put(orderId, hashCode);
+        }
+        /*MsgTuple msgTuple = (MsgTuple) tuple;
 
         //处理每条消息, 同一分钟的消息派发到同一个task（线程）当中
         for (MessageExt msg : msgTuple.getMsgList()) {
@@ -49,7 +67,7 @@ public class PayDispatchBolt implements IRichBolt{
             long minute = (second / 60) * 60;   //以第0秒作为这一分钟的标识，10位
 
             collector.emit(new Values(minute, amount, platform));
-        }
+        }*/
 
         collector.ack(tuple);
     }

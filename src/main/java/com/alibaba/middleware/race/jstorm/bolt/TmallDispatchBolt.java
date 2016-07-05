@@ -13,6 +13,7 @@ import com.alibaba.middleware.race.model.OrderMessage;
 import com.alibaba.rocketmq.common.message.MessageExt;
 import org.apache.log4j.Logger;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -22,6 +23,7 @@ import java.util.Map;
 public class TmallDispatchBolt implements IRichBolt {
     private OutputCollector collector;
     private static final Logger Log = Logger.getLogger(TmallDispatchBolt.class);
+    protected transient HashMap<Long, Long> uniqueMap;
 
     @Override
     public void prepare(Map map, TopologyContext topologyContext, OutputCollector outputCollector) {
@@ -30,26 +32,21 @@ public class TmallDispatchBolt implements IRichBolt {
 
     @Override
     public void execute(Tuple tuple) {
-        MsgTuple msgTuple = (MsgTuple) tuple;
+        //按照field 顺序得到payment 内容
+        long orderId = tuple.getLong(0);
+        long payAmount = tuple.getLong(1);
+        short paySource = tuple.getShort(2);
+        short platform = tuple.getShort(3);
+        long createTime = tuple.getLong(4);
 
-        //处理每条消息, 同一分钟的消息派发到同一个task（线程）当中
-        for (MessageExt msg : msgTuple.getMsgList()) {
-            byte[] body = msg.getBody();
+        //同一个订单，不同的payment的hashcode (hint: 生产数据payAmount小于100， 扩大paySource 与 platform比重, 不保证绝对正确
+        long hashCode = payAmount | (paySource << 10) | (platform << 11) | createTime;
 
-            //官方Info: 生产者停止生成数据, 并不意味着马上结束 （？？ 什么时候结束？
-            if (body.length == 2 && body[0] == 0 && body[1] == 0) {
-                Log.info("Got the end signal of tmall message queue");
-                continue;
-            }
-
-            OrderMessage orderMessage = RaceUtils.readKryoObject(OrderMessage.class, body);
-
-            //只需要订单时间和金额，后续可能需要 orderID 来去重？
-            double price = orderMessage.getTotalPrice();
-            long second = orderMessage.getCreateTime() / 1000;
-            long minute = (second / 60) * 60;   //以第0秒作为这一分钟的标识，10位
-
-            collector.emit(new Values(minute, price));
+        //去重
+        Long existOrder = uniqueMap.get(orderId);
+        if(existOrder == null || existOrder != hashCode){
+            collector.emit(new Values(createTime, payAmount));
+            uniqueMap.put(orderId, hashCode);
         }
 
         collector.ack(tuple);
