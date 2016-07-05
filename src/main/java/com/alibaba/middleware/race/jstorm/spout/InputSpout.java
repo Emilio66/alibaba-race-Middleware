@@ -101,8 +101,15 @@ public class InputSpout implements IRichSpout, MessageListenerConcurrently {
 
     @Override
     public ConsumeConcurrentlyStatus consumeMessage(List<MessageExt> msgList, ConsumeConcurrentlyContext context) {
+
         MessageQueue queue = context.getMessageQueue();
         String topic = queue.getTopic();
+        LOG.info("enter consumeMessage()");
+        LOG.info("topic is: " + topic);
+        LOG.info("msg size is: " + msgList.size());
+        for (MessageExt msg: msgList) {
+            LOG.info(RaceUtils.readKryoObject(PaymentMessage.class, msg.getBody()).toString());
+        }
 
         if (topic.equals(RaceConfig.MqPayTopic)) {
             for (MessageExt msg : msgList) {
