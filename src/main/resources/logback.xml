@@ -34,6 +34,22 @@ Level orders:
         </encoder>
     </appender>
 
+    <appender name="JSTORM_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>jstorm.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <FileNamePattern>race-%d{yyyy-MM-dd}.zip</FileNamePattern>
+            <timeBasedFileNamingAndTriggeringPolicy
+                    class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <maxFileSize>10MB</maxFileSize>
+            </timeBasedFileNamingAndTriggeringPolicy>
+            <cleanHistoryOnStart>true</cleanHistoryOnStart>
+            <MaxHistory>30</MaxHistory>
+        </rollingPolicy>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{5} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
     <logger name="com.alibaba.middleware.race" additivity="false">
         <level value="DEBUG" />
         <appender-ref ref="STDOUT" />
@@ -44,7 +60,7 @@ Level orders:
     <!-- the level of the root level is set to DEBUG by default.       -->
     <root level="DEBUG">
         <appender-ref ref="STDOUT" />
-        <appender-ref ref="FILE" />
+        <appender-ref ref="JSTORM_FILE" />
     </root>
 
 </configuration>
