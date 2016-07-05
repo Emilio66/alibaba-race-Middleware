@@ -19,7 +19,23 @@ Level orders:
 
     <!-- File appender -->
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>race.log</file>
+        <file>../logs/424452my9i/race.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <FileNamePattern>race-%d{yyyy-MM-dd}.zip</FileNamePattern>
+            <timeBasedFileNamingAndTriggeringPolicy
+                    class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <maxFileSize>10MB</maxFileSize>
+            </timeBasedFileNamingAndTriggeringPolicy>
+            <cleanHistoryOnStart>true</cleanHistoryOnStart>
+            <MaxHistory>30</MaxHistory>
+        </rollingPolicy>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{5} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="JSTORM_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>../logs/424452my9i/jstorm.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <FileNamePattern>race-%d{yyyy-MM-dd}.zip</FileNamePattern>
             <timeBasedFileNamingAndTriggeringPolicy

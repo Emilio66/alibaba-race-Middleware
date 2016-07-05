@@ -29,7 +29,7 @@ public class RaceTopology {
 
     public static void main(String[] args) throws Exception {
         Config conf = new Config();
-        conf.put("user.defined.logback.conf", "classpath:logback.xml");
+       // conf.put("user.defined.logback.conf", "classpath:logback.xml");
         int spout_Parallelism_hint = 1;
         int dispatch_Parallelism_hint = 1;
         int count_Parallelism_hint = 1;
