@@ -3,6 +3,7 @@ package com.alibaba.middleware.race.Tair;
 import com.alibaba.middleware.race.RaceConfig;
 import org.apache.log4j.Logger;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -12,9 +13,9 @@ import java.util.concurrent.ConcurrentHashMap;
 //线程： 把数据存入tair
 public class PersistThread implements Runnable {
     private String prefix;
-    private ConcurrentHashMap<Long, Double> hashMap;
+    private HashMap<Long, Double> hashMap;
     private static Logger Log = Logger.getLogger(PersistThread.class);
-    public PersistThread(String prefix, ConcurrentHashMap<Long, Double> hashMap){
+    public PersistThread(String prefix, HashMap<Long, Double> hashMap){
         this.prefix = prefix;
         this.hashMap = hashMap;
     }

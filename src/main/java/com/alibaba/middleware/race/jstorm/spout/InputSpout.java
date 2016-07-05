@@ -149,6 +149,17 @@ public class InputSpout implements IRichSpout, MessageListenerConcurrently {
     }
 
     @Override
+    public void declareOutputFields(OutputFieldsDeclarer declarer) {
+        //declare 3 stream
+        declarer.declareStream(taobaoStream,
+                new Fields("orderId", "payAmount","paySource", "payPlatform", "createTime"));
+        declarer.declareStream(tmallStream,
+                new Fields("orderId", "payAmount","paySource", "payPlatform", "createTime"));
+        declarer.declareStream(payStream,
+                new Fields("orderId", "payAmount","paySource", "payPlatform", "createTime"));
+    }
+
+    @Override
     public void ack(Object o) {
 
     }
@@ -174,14 +185,6 @@ public class InputSpout implements IRichSpout, MessageListenerConcurrently {
     public void deactivate() {
         if (consumer != null)
             consumer.suspend();
-    }
-
-    @Override
-    public void declareOutputFields(OutputFieldsDeclarer declarer) {
-        //declare 3 stream
-        declarer.declareStream(taobaoStream, new Fields(taobaoStream));
-        declarer.declareStream(tmallStream, new Fields(tmallStream));
-        declarer.declareStream(payStream, new Fields(payStream));
     }
 
     @Override

@@ -22,6 +22,15 @@ public class PaymentTuple implements Serializable {
         this.createTime = msg.getCreateTime() / 60000 * 60;
     }
 
+    public PaymentTuple(long orderId, long payAmount, short paySource,
+                        short payPlatform, long createTime){
+        this.orderId = orderId;
+        this.payAmount = payAmount;
+        this.paySource = paySource;
+        this.payPlatform = payPlatform;
+        this.createTime = createTime;
+    }
+
     public long getOrderId() {
         return orderId;
     }
@@ -60,5 +69,13 @@ public class PaymentTuple implements Serializable {
 
     public void setCreateTime(long createTime) {
         this.createTime = createTime;
+    }
+
+    @Override
+    public int hashCode() {
+        //int 10位: createTime 10 位,1467xxx, paySource 0-3, payAmount < 100
+        int shortOrderId = (int)(0X3FFFFFFFL | orderId); //trim 30 bit, i.e 9 digit
+        long hashCode = shortOrderId | payAmount | (paySource << 8) | (payPlatform << 9) | createTime;
+        return (int)hashCode;
     }
 }

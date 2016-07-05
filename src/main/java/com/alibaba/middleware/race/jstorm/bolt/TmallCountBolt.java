@@ -9,9 +9,12 @@ import com.alibaba.middleware.race.RaceConfig;
 import com.alibaba.middleware.race.Tair.PersistThread;
 import com.alibaba.middleware.race.Tair.TairOperatorImpl;
 import com.alibaba.middleware.race.Utils.Arith;
+import com.alibaba.middleware.race.jstorm.tuple.PaymentTuple;
 import org.apache.log4j.Logger;
 import sun.rmi.runtime.Log;
 
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -24,9 +27,9 @@ import java.util.concurrent.TimeUnit;
 public class TmallCountBolt implements IRichBolt {
     private OutputCollector collector;
     private static final Logger Log = Logger.getLogger(TmallCountBolt.class);
-    private static ConcurrentHashMap<Long, Double> hashMap = new ConcurrentHashMap<Long, Double>(); //计数表
+    private static HashMap<Long, Double> hashMap = new HashMap<Long, Double>(); //计数表
     private static ScheduledThreadPoolExecutor scheduledPersist = new ScheduledThreadPoolExecutor(RaceConfig.persistThreadNum);//定时存入Tair
-
+    private static HashSet<Integer> distinctSet = new HashSet<Integer>(1024);
     @Override
     public void prepare(Map map, TopologyContext topologyContext, OutputCollector outputCollector) {
         this.collector = collector;
@@ -36,18 +39,33 @@ public class TmallCountBolt implements IRichBolt {
 
     @Override
     public void execute(Tuple tuple) {
-        Long minute = tuple.getLong(0);
-        Double price = tuple.getLong(1) / 100.0;
-        Double currentMoney = hashMap.get(minute);
+        long orderId = tuple.getLong(0);
+        long payAmount = tuple.getLong(1);
+        short paySource = tuple.getShort(2);
+        short platform = tuple.getShort(3);
+        long createTime = tuple.getLong(4);
 
-        if (currentMoney == null)
-            currentMoney = 0.0;
-        currentMoney += price;  //累加金额
-        //保留两位小数 (暂时不用
-        //currentMoney = Arith.round(currentMoney, 2);
-        hashMap.put(minute, currentMoney);
+        Log.debug("TmallCountBolt get [order ID: " + orderId + ", time: " + createTime
+                + " ￥" + payAmount + " ]");
 
-        Log.debug("TaobaoCountBolt get [min: "+minute+", ￥"+price+", current sum ￥ "+currentMoney+"]");
+        //判重
+        PaymentTuple paymentTuple = new PaymentTuple(orderId, payAmount, paySource, platform, createTime);
+
+        if (!distinctSet.contains(paymentTuple.hashCode())) {
+
+            Double price = payAmount / 100.0; //change to double
+            Double currentMoney = hashMap.get(createTime);
+
+            if (currentMoney == null)
+                currentMoney = 0.0;
+            currentMoney += price;  //累加金额
+            //保留两位小数 （暂时去掉
+            // currentMoney = Arith.round(currentMoney, 2);
+
+            Log.debug("TmallCountBolt get [min: " + createTime + ", ￥" + price + ", current sum ￥ " + currentMoney + "]");
+            hashMap.put(createTime, currentMoney);
+            distinctSet.add(paymentTuple.hashCode());
+        }
         collector.ack(tuple);
     }
 

@@ -33,7 +33,7 @@ public class RaceTopology {
 
     public static void main(String[] args) throws Exception {
         Config conf = new Config();
-        conf.put("user.defined.logback.conf", "classpath:logback.xml");
+       // conf.put("user.defined.logback.conf", "classpath:logback.xml");
         int spout_Parallelism_hint = 1;
         int dispatch_Parallelism_hint = 1;
         int count_Parallelism_hint = 1;
@@ -43,22 +43,22 @@ public class RaceTopology {
         builder.setSpout("source", new InputSpout(), spout_Parallelism_hint);
 
         //tmall data process
-        builder.setBolt("tmallDispatch", new TmallDispatchBolt(), dispatch_Parallelism_hint).
-                localOrShuffleGrouping("source", InputSpout.tmallStream);    //different stream
+        //builder.setBolt("tmallDispatch", new TmallDispatchBolt(), dispatch_Parallelism_hint).
+          //      localOrShuffleGrouping("source", InputSpout.tmallStream);    //different stream
         builder.setBolt("tmallCount", new TmallCountBolt(), count_Parallelism_hint).
-                fieldsGrouping("tmallDispatch", new Fields("minute"));
+                fieldsGrouping("source", new Fields("createTime"));
 
         //taobao data process
-        builder.setBolt("taobaoDispatch", new TaobaoDispatchBolt(), dispatch_Parallelism_hint).
-                localOrShuffleGrouping("source", InputSpout.taobaoStream);
+        //builder.setBolt("taobaoDispatch", new TaobaoDispatchBolt(), dispatch_Parallelism_hint).
+          //      localOrShuffleGrouping("source", InputSpout.taobaoStream);
         builder.setBolt("taobaoCount", new TaobaoCountBolt(), count_Parallelism_hint).
-                fieldsGrouping("taobaoDispatch", new Fields("minute"));
+                fieldsGrouping("source", new Fields("createTime"));
 
         //pay ratio process
-        builder.setBolt("payDispatch", new PayDispatchBolt(), dispatch_Parallelism_hint).
-                localOrShuffleGrouping("source", InputSpout.payStream);
+        //builder.setBolt("payDispatch", new PayDispatchBolt(), dispatch_Parallelism_hint).
+          //      localOrShuffleGrouping("source", InputSpout.payStream);
         builder.setBolt("payRatioCount", new PayRatioBolt(), count_Parallelism_hint).
-                fieldsGrouping("payDispatch", new Fields("minute"));
+                fieldsGrouping("source", new Fields("createTime"));
         try {
             String topologyName = RaceConfig.JstormTopologyName;
             StormSubmitter.submitTopology(topologyName, conf, builder.createTopology());
