@@ -2,6 +2,11 @@ package com.alibaba.middleware.race.Tair;
 
 import com.alibaba.middleware.race.RaceConfig;
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+
+import com.taobao.tair.ResultCode;
+import com.taobao.tair.impl.DefaultTairManager;
 import org.apache.log4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,28 +17,42 @@ import org.slf4j.LoggerFactory;
 public class TairOperatorImpl {
 
     public static Logger LOG = Logger.getLogger(TairOperatorImpl.class);
+    private DefaultTairManager tairManager;
+    private int namespace;
     public TairOperatorImpl(String masterConfigServer,
                             String slaveConfigServer,
                             String groupName,
                             int namespace) {
         LOG.debug(" new tair operator "+masterConfigServer+", "+slaveConfigServer
                 +", "+groupName+", namespace"+namespace);
+
+        this.namespace = namespace;
+        this.tairManager = new DefaultTairManager();
+        List<String> cs = new ArrayList<>();
+        cs.add(masterConfigServer);
+        cs.add(slaveConfigServer);
+
+        tairManager.setConfigServerList(cs);
+        tairManager.setGroupName(groupName);
+        tairManager.init();
     }
 
     public boolean write(Serializable key, Serializable value) {
         LOG.debug("write data [ "+key+" : "+value+" ]");
+        tairManager.put(namespace, key, value);
         return false;
     }
 
     public Object get(Serializable key) {
-        return null;
+        return tairManager.get(namespace, key);
     }
 
-    public boolean remove(Serializable key) {
-        return false;
+    public ResultCode remove(Serializable key) {
+        return tairManager.removeItems(namespace,key,0,1);
     }
 
     public void close(){
+        tairManager.close();
     }
 
     //天猫的分钟交易额写入tair

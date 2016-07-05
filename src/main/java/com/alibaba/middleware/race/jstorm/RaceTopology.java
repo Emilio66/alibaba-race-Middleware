@@ -29,10 +29,11 @@ public class RaceTopology {
 
     public static void main(String[] args) throws Exception {
         Config conf = new Config();
+        conf.put("TOPOLOGY_WORKERS",4);
        // conf.put("user.defined.logback.conf", "classpath:logback.xml");
-        int spout_Parallelism_hint = 1;
+        int spout_Parallelism_hint = 2;
         int dispatch_Parallelism_hint = 1;
-        int count_Parallelism_hint = 1;
+        int count_Parallelism_hint = 3;
 
         TopologyBuilder builder = new TopologyBuilder();
 
