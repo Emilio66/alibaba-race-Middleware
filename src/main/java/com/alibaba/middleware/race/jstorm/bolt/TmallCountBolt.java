@@ -8,6 +8,7 @@ import backtype.storm.tuple.Tuple;
 import com.alibaba.middleware.race.RaceConfig;
 import com.alibaba.middleware.race.Tair.PersistThread;
 import com.alibaba.middleware.race.Tair.TairOperatorImpl;
+import com.alibaba.middleware.race.Utils.Arith;
 import org.apache.log4j.Logger;
 import sun.rmi.runtime.Log;
 
@@ -36,12 +37,14 @@ public class TmallCountBolt implements IRichBolt {
     @Override
     public void execute(Tuple tuple) {
         Long minute = tuple.getLong(0);
-        Double price = tuple.getDouble(1);
+        Double price = tuple.getLong(1) / 100.0;
         Double currentMoney = hashMap.get(minute);
 
         if (currentMoney == null)
             currentMoney = 0.0;
         currentMoney += price;  //累加金额
+        //保留两位小数
+        Arith.round(currentMoney, 2);
         hashMap.put(minute, currentMoney);
 
         collector.ack(tuple);
