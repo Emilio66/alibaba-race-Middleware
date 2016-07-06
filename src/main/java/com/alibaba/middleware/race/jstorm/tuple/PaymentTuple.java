@@ -14,6 +14,10 @@ public class PaymentTuple implements Serializable {
     private short payPlatform;
     private long createTime;
 
+    //无参构造函数，以备kryto 序列化
+    public PaymentTuple(){
+
+    }
     public PaymentTuple(PaymentMessage msg) {
         this.orderId = msg.getOrderId();
         this.payAmount = (long)(msg.getPayAmount() * 100);
@@ -78,4 +82,9 @@ public class PaymentTuple implements Serializable {
         long hashCode = shortOrderId | payAmount | (paySource << 8) | (payPlatform << 9) | createTime;
         return (int)hashCode;
     }
+    @Override
+    public String toString() {
+	return "paymentTuple: { id: "+orderId+" ￥"+payAmount+", paySource: "+paySource+", payPlatform: "
+		+payPlatform+" , createMinute: "+createTime+" }";
+  }
 }

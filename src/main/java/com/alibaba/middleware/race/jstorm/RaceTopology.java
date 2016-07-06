@@ -9,7 +9,7 @@ import com.alibaba.middleware.race.jstorm.bolt.*;
 import com.alibaba.middleware.race.jstorm.spout.InputSpout;
 import org.apache.log4j.Logger;
 import org.slf4j.LoggerFactory;
-
+import backtype.storm.LocalCluster;
 
 /**
  * 这是一个很简单的例子
@@ -30,10 +30,13 @@ public class RaceTopology {
     public static void main(String[] args) throws Exception {
         Config conf = new Config();
         conf.put("TOPOLOGY_WORKERS",4);
-       // conf.put("user.defined.logback.conf", "classpath:logback.xml");
+        // conf.put("user.defined.logback.conf", "classpath:logback.xml");
         int spout_Parallelism_hint = 2;
         int dispatch_Parallelism_hint = 1;
-        int count_Parallelism_hint = 3;
+        int count_Parallelism_hint = 7;
+//        LocalCluster cluster = new LocalCluster();
+//建议加上这行，使得每个bolt/spout的并发度都为1
+//        conf.put(Config.TOPOLOGY_MAX_TASK_PARALLELISM, 1);
 
         TopologyBuilder builder = new TopologyBuilder();
 
@@ -41,25 +44,26 @@ public class RaceTopology {
 
         //tmall data process
         //builder.setBolt("tmallDispatch", new TmallDispatchBolt(), dispatch_Parallelism_hint).
-          //      localOrShuffleGrouping("source", InputSpout.tmallStream);    //different stream
+        //      localOrShuffleGrouping("source", InputSpout.tmallStream);    //different stream
         builder.setBolt("tmallCount", new TmallCountBolt(), count_Parallelism_hint).
-                fieldsGrouping("source",InputSpout.tmallStream, new Fields("createTime"));
+                fieldsGrouping("source", InputSpout.tmallStream, new Fields("createTime"));
 
         //taobao data process
         //builder.setBolt("taobaoDispatch", new TaobaoDispatchBolt(), dispatch_Parallelism_hint).
-          //      localOrShuffleGrouping("source", InputSpout.taobaoStream);
+        //      localOrShuffleGrouping("source", InputSpout.taobaoStream);
         builder.setBolt("taobaoCount", new TaobaoCountBolt(), count_Parallelism_hint).
                 fieldsGrouping("source", InputSpout.taobaoStream, new Fields("createTime"));
 
         //pay ratio process
         //builder.setBolt("payDispatch", new PayDispatchBolt(), dispatch_Parallelism_hint).
-          //      localOrShuffleGrouping("source", InputSpout.payStream);
+        //      localOrShuffleGrouping("source", InputSpout.payStream);
         builder.setBolt("payRatioCount", new PayRatioBolt(), count_Parallelism_hint).
                 fieldsGrouping("source", InputSpout.payStream, new Fields("createTime"));
         try {
             String topologyName = RaceConfig.JstormTopologyName;
-            StormSubmitter.submitTopology(topologyName, conf, builder.createTopology());
-            LOG.debug("Succesfully start topology with config: "+conf);
+               StormSubmitter.submitTopology(topologyName, conf, builder.createTopology());
+            // TairClient 2.3.5: init config failed.submitTopology(topologyName, conf, builder.createTopology());
+            LOG.debug("Succesfully start topology with config: " + conf);
         } catch (Exception e) {
             LOG.info("Submit topology error!!", e);
             e.printStackTrace();

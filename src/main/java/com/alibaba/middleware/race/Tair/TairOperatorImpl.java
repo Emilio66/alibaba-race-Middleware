@@ -8,11 +8,11 @@ import java.util.List;
 import com.taobao.tair.ResultCode;
 import com.taobao.tair.impl.DefaultTairManager;
 import org.apache.log4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
- * 读写tair所需要的集群信息，如masterConfigServer/slaveConfigServer地址/
- * group 、namespace我们都会在正式提交代码前告知选手
+ * 存储流程：
+ * 1. 以concurrentHashMap为数据来源，因为bolt在写数据，这边在读数据，需并发控制
+ * 2. 为了防止插入重复数据，可以将存入的数据从hashMap中删除，当他要更新时，再重新插入，这样减少冗余操作
  */
 public class TairOperatorImpl {
 
@@ -30,11 +30,15 @@ public class TairOperatorImpl {
         this.tairManager = new DefaultTairManager();
         List<String> cs = new ArrayList<>();
         cs.add(masterConfigServer);
-        cs.add(slaveConfigServer);
+        cs.add(slaveConfigServer); //local, no slave
 
         tairManager.setConfigServerList(cs);
         tairManager.setGroupName(groupName);
         tairManager.init();
+    }
+    public static TairOperatorImpl newInstance(){
+        return new TairOperatorImpl(RaceConfig.TairConfigServer, RaceConfig.TairSalveConfigServer,
+                RaceConfig.TairGroup, RaceConfig.TairNamespace);
     }
 
     public boolean write(Serializable key, Serializable value) {

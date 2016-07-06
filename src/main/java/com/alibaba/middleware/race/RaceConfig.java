@@ -13,7 +13,7 @@ public class RaceConfig implements Serializable {
     public static boolean autoACK           = true; //调优用，自动ACK
     public static int     maxFailTime       = 4;    //调优用，重试次数
     public static int     persistThreadNum  = 1;
-    public static int     persitInterval    = 3;    //seconds
+    public static int     persitInterval    = 5;    //seconds
     public static int     persistInitialDelay   = 10;   //seconds, 启动后延迟一段时间再开始执行
     //public static String
 
@@ -27,8 +27,12 @@ public class RaceConfig implements Serializable {
     public static String  JstormTopologyName    = "424452my9i";
     public static String  MetaConsumerGroup     = "424452my9i";    //RabbitMQ consumer group
     public static String  MqPayTopic            = "MiddlewareRaceTestData_Pay"; //不同的topic
-    public static String  MqTmallTradeTopic     = "MiddlewareRaceTestData_TBOrder";
-    public static String  MqTaobaoTradeTopic    = "MiddlewareRaceTestData_TMOrder";
+    public static String  MqTmallTradeTopic     = "MiddlewareRaceTestData_TMOrder";
+    public static String  MqTaobaoTradeTopic    = "MiddlewareRaceTestData_TBOrder";
+    //public static String  TairConfigServer      ="127.0.0.1:5198";// //这是本地，提交之前记得改回去
+    //public static String  TairSalveConfigServer = "127.0.0.1:5198";//"10.101.72.128:5198";
+    //public static String  TairGroup             = "group_1";//"group_tianchi";
+    //public static Integer TairNamespace         = 0; //25469;
     public static String  TairConfigServer      = "10.101.72.127:5198";
     public static String  TairSalveConfigServer = "10.101.72.128:5198";
     public static String  TairGroup             = "group_tianchi";

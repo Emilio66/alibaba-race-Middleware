@@ -20,6 +20,7 @@ public class PersistThread implements Runnable {
     public PersistThread(String prefix, HashMap<Long, Double> hashMap){
         this.prefix = prefix;
         this.hashMap = hashMap;
+	Log.info("New Persist Thread for "+prefix+" , size of map: "+hashMap);
     }
 
     @Override
@@ -32,7 +33,7 @@ public class PersistThread implements Runnable {
             Long key = entry.getKey();
             Double value = entry.getValue();
 
-            //LOG.debug(key + " : " + value);         //log
+            Log.debug(key + " : " + value);         //log
             tairOperator.write(prefix +"_"+ key, value);   //persist
         }
     }

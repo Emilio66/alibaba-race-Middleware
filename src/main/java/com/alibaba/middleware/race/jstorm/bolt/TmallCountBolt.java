@@ -28,14 +28,18 @@ import java.util.concurrent.TimeUnit;
 public class TmallCountBolt implements IRichBolt {
     private OutputCollector collector;
     private static final Logger Log = Logger.getLogger(TmallCountBolt.class);
-    private static HashMap<Long, Double> hashMap = new HashMap<Long, Double>(); //计数表
+    private static HashMap<Long, Long> hashMap = new HashMap<Long, Long>(); //计数表
     private static ScheduledThreadPoolExecutor scheduledPersist = new ScheduledThreadPoolExecutor(RaceConfig.persistThreadNum);//定时存入Tair
     private static HashSet<Integer> distinctSet = new HashSet<Integer>(1024);
+    private TairOperatorImpl tairOperator;
+    private String prefix;
     @Override
     public void prepare(Map map, TopologyContext topologyContext, OutputCollector outputCollector) {
-        this.collector = collector;
-        scheduledPersist.scheduleAtFixedRate( new PersistThread(RaceConfig.prex_tmall, hashMap),
-                RaceConfig.persistInitialDelay, RaceConfig.persitInterval, TimeUnit.SECONDS);
+        this.collector = outputCollector;
+        /*scheduledPersist.scheduleAtFixedRate( new PersistThread(RaceConfig.prex_tmall, hashMap),
+                RaceConfig.persistInitialDelay, RaceConfig.persitInterval, TimeUnit.SECONDS);*/
+        tairOperator = TairOperatorImpl.newInstance();
+        prefix = RaceConfig.prex_tmall;
     }
 
     @Override
@@ -54,18 +58,19 @@ public class TmallCountBolt implements IRichBolt {
 
         if (!distinctSet.contains(paymentTuple.hashCode())) {
 
-            Double price = payAmount / 100.0; //change to double
-            Double currentMoney = hashMap.get(createTime);
+            //Double price = payAmount / 100.0; //change to double
+            Long currentMoney = hashMap.get(createTime);
 
             if (currentMoney == null)
-                currentMoney = 0.0;
-            currentMoney += price;  //累加金额
+                currentMoney = 0L;
+            currentMoney += payAmount;  //累加金额
             //保留两位小数 （暂时去掉
             // currentMoney = Arith.round(currentMoney, 2);
 
-            Log.debug("TmallCountBolt get [min: " + createTime + ", ￥" + price + ", current sum ￥ " + currentMoney + "]");
+         //   Log.debug("TmallCountBolt get [min: " + createTime + ", ￥" + payAmount + ", current sum ￥ " + currentMoney + "]");
             hashMap.put(createTime, currentMoney);
             distinctSet.add(paymentTuple.hashCode());
+            tairOperator.write(prefix + "_" +createTime, currentMoney / 100.0);
         }
         collector.ack(tuple);
     }

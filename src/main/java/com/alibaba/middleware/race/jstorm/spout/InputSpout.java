@@ -58,9 +58,11 @@ public class InputSpout implements IRichSpout, MessageListenerConcurrently {
 
         String instanceName = RaceConfig.MetaConsumerGroup + "@" + JStormUtils.process_pid();
         consumer = new DefaultMQPushConsumer(RaceConfig.MetaConsumerGroup);
-        consumer.setNamesrvAddr(System.getProperty("NAMESRV_ADDR"));//(RaceConfig.nameServer);
+        consumer.setNamesrvAddr(System.getenv("NAMESRV_ADDR"));//(RaceConfig.nameServer);
         consumer.setInstanceName(instanceName);
         consumer.setConsumeFromWhere(ConsumeFromWhere.CONSUME_FROM_FIRST_OFFSET);
+        //for better perfomance, message batch process
+        consumer.setConsumeMessageBatchMaxSize(100);
 
         try {
             consumer.subscribe(RaceConfig.MqPayTopic, "*"); //订阅支付消息的所有tag *
@@ -71,6 +73,7 @@ public class InputSpout implements IRichSpout, MessageListenerConcurrently {
             consumer.start();       //!!启动consumer, 一定不能缺少！
 
             LOG.info("successfully create consumer " + instanceName);
+            LOG.debug("consumer nameServerAddress: " + consumer.getNamesrvAddr());
         } catch (MQClientException e) {
             LOG.error("Failed to create Consumer subscription ", e);
             e.printStackTrace();
@@ -91,11 +94,16 @@ public class InputSpout implements IRichSpout, MessageListenerConcurrently {
         if (taobaoOrder.contains(payment.getOrderId())) {
             collector.emit(RaceConfig.taobaoStream, new Values(payment.getOrderId(), payment.getPayAmount(),
                     payment.getPaySource(), payment.getPayPlatform(), payment.getCreateTime()));
+           // LOG.info(RaceConfig.taobaoStream + " stream emit " + payment);
         } else if (tmallOrder.contains(payment.getOrderId())) {
             collector.emit(RaceConfig.tmallStream, new Values(payment.getOrderId(), payment.getPayAmount(),
                     payment.getPaySource(), payment.getPayPlatform(), payment.getCreateTime()));
+
+          //  LOG.info(RaceConfig.tmallStream + " stream emit " + payment);
         } else {
             paymentBuffer.offer(payment);
+
+          //  LOG.info("No payment info, put in buffer queue: " + payment);
         }
     }
 
@@ -107,9 +115,9 @@ public class InputSpout implements IRichSpout, MessageListenerConcurrently {
         LOG.info("enter consumeMessage()");
         LOG.info("topic is: " + topic);
         LOG.info("msg size is: " + msgList.size());
-        for (MessageExt msg: msgList) {
+       /* for (MessageExt msg : msgList) {
             LOG.info(RaceUtils.readKryoObject(PaymentMessage.class, msg.getBody()).toString());
-        }
+        }*/
 
         if (topic.equals(RaceConfig.MqPayTopic)) {
             for (MessageExt msg : msgList) {
@@ -127,9 +135,9 @@ public class InputSpout implements IRichSpout, MessageListenerConcurrently {
 
                 // second join with orderId to determine whether its for tmall or taobao
                 sendTuple(payment);
-                LOG.debug("consuemr get pay - "+msg.getTopic()+" message [order ID: "+ payment.getOrderId()
-                        +", time: "+payment.getCreateTime()
-                        +" ￥"+payment.getPayAmount()+" ]");
+               /* LOG.debug("consuemr get pay - " + msg.getTopic() + " message [order ID: " + payment.getOrderId()
+                        + ", time: " + payment.getCreateTime()
+                        + " ￥" + payment.getPayAmount() + " ]");*/
             }
         } else {
             for (MessageExt msg : msgList) {
@@ -140,14 +148,15 @@ public class InputSpout implements IRichSpout, MessageListenerConcurrently {
                 }
 
                 OrderMessage order = RaceUtils.readKryoObject(OrderMessage.class, body);
+                //topic = msg.getTopic(); //msg topic doesn't equal queue topic
                 if (topic.equals(RaceConfig.MqTaobaoTradeTopic)) {
                     taobaoOrder.add(order.getOrderId());
-                    LOG.debug("consuemr get taobao - "+msg.getTopic()+" message [order ID: "+ order.getOrderId()
-                            +" ]");
+               //     LOG.debug("consuemr get taobao - " + msg.getTopic() + " message [order ID: " + order.getOrderId()
+               //             + " ]");
                 } else {
                     tmallOrder.add(order.getOrderId());
-                    LOG.debug("consuemr get tmall- "+msg.getTopic()+" message [order ID: "+ order.getOrderId()
-                            +" ]");
+                //    LOG.debug("consuemr get tmall- " + msg.getTopic() + " message [order ID: " + order.getOrderId()
+                //            + " ]");
                 }
             }
         }
@@ -159,39 +168,46 @@ public class InputSpout implements IRichSpout, MessageListenerConcurrently {
     public void declareOutputFields(OutputFieldsDeclarer declarer) {
         //declare 3 stream
         declarer.declareStream(taobaoStream,
-                new Fields("orderId", "payAmount","paySource", "payPlatform", "createTime"));
+                new Fields("orderId", "payAmount", "paySource", "payPlatform", "createTime"));
         declarer.declareStream(tmallStream,
-                new Fields("orderId", "payAmount","paySource", "payPlatform", "createTime"));
+                new Fields("orderId", "payAmount", "paySource", "payPlatform", "createTime"));
         declarer.declareStream(payStream,
-                new Fields("orderId", "payAmount","paySource", "payPlatform", "createTime"));
+                new Fields("orderId", "payAmount", "paySource", "payPlatform", "createTime"));
     }
 
     @Override
     public void ack(Object o) {
+        LOG.info("InputSpout ack " + o);
 
     }
 
     @Override
     public void fail(Object o) {
 
+        LOG.info("InputSpout fail !!  " + o);
     }
 
     @Override
     public void close() {
         if (consumer != null)
             consumer.shutdown();
+
+        LOG.info("Conusmer shutdown ! ");
     }
 
     @Override
     public void activate() {
         if (consumer != null)
             consumer.resume();
+        LOG.info("Conusmer activate! ");
     }
 
     @Override
     public void deactivate() {
         if (consumer != null)
             consumer.suspend();
+
+        LOG.info("Conusmer deactivate! ");
     }
 
     @Override

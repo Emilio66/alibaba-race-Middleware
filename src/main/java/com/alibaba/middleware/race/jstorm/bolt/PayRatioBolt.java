@@ -7,10 +7,10 @@ import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.tuple.Tuple;
 import com.alibaba.middleware.race.RaceConfig;
 import com.alibaba.middleware.race.Tair.PersistThread;
+import com.alibaba.middleware.race.Tair.TairOperatorImpl;
 import com.alibaba.middleware.race.Utils.Arith;
 import com.alibaba.middleware.race.jstorm.tuple.PaymentTuple;
 import org.apache.log4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -37,12 +37,18 @@ public class PayRatioBolt implements IRichBolt {
     private static HashSet<Integer> distinctSet = new HashSet<Integer>(1024);
     private static ScheduledThreadPoolExecutor scheduledPersist = new ScheduledThreadPoolExecutor(RaceConfig.persistThreadNum);
 
+    private TairOperatorImpl tairOperator;
+    private String prefix;
+
     @Override
     public void prepare(Map map, TopologyContext topologyContext, OutputCollector outputCollector) {
         this.collector = outputCollector;
         //定时存入Tair
-        scheduledPersist.scheduleAtFixedRate(new PersistThread(RaceConfig.prex_ratio, ratioMap),
-                RaceConfig.persistInitialDelay, RaceConfig.persitInterval, TimeUnit.SECONDS);
+        /*scheduledPersist.scheduleAtFixedRate(new PersistThread(RaceConfig.prex_ratio, ratioMap),
+                RaceConfig.persistInitialDelay, RaceConfig.persitInterval, TimeUnit.SECONDS);*/
+        LOG.info("create bolt: " + this.toString());
+        tairOperator = TairOperatorImpl.newInstance();
+        prefix = RaceConfig.prex_ratio;
     }
 
     /**
@@ -86,9 +92,11 @@ public class PayRatioBolt implements IRichBolt {
                 Long mobileAmount = mobileMap.get(createTime);
                 if (mobileAmount == null)
                     mobileAmount = 0L;
-                double ratio = Arith.div(mobileAmount * 1.0, pcAmount * 1.0, 2);//精确除法,保留2位
+                //double ratio = Arith.div(mobileAmount * 1.0, pcAmount * 1.0, 2);//精确除法,保留2位
+                double ratio = mobileAmount/pcAmount;
                 ratioMap.put(createTime, ratio);
 
+                tairOperator.write(prefix + "_" + createTime, ratio);
             } else {
                 //无线端交易
                 Long mobileAmount = mobileMap.get(createTime);
@@ -107,29 +115,31 @@ public class PayRatioBolt implements IRichBolt {
                 Long pcAmount = pcMap.get(createTime);
                 Double ratio = Double.MAX_VALUE; //pc 端为 0， 比值无限大
                 if (pcAmount != null) {
-                    ratio = Arith.div(mobileAmount * 1.0, pcAmount * 1.0, 2);//精确除法,保留2位
+                   // ratio = Arith.div(mobileAmount * 1.0, pcAmount * 1.0, 2);//精确除法,保留2位
+                    ratio = mobileAmount * 1.0 / pcAmount;
                 }
 
                 ratioMap.put(createTime, ratio);
+                tairOperator.write(prefix + "_" +createTime, ratio);
             }
 
             distinctSet.add(paymentTuple.hashCode());
         }
-            collector.ack(tuple);
-        }
-
-        @Override
-        public void declareOutputFields (OutputFieldsDeclarer outputFieldsDeclarer){
-
-        }
-
-        @Override
-        public void cleanup () {
-
-        }
-
-        @Override
-        public Map<String, Object> getComponentConfiguration () {
-            return null;
-        }
+        collector.ack(tuple);
     }
+
+    @Override
+    public void declareOutputFields(OutputFieldsDeclarer outputFieldsDeclarer) {
+
+    }
+
+    @Override
+    public void cleanup() {
+
+    }
+
+    @Override
+    public Map<String, Object> getComponentConfiguration() {
+        return null;
+    }
+}
