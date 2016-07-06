@@ -33,7 +33,7 @@ public class PayRatioBolt implements IRichBolt {
 
     private static HashMap<Long, Long> mobileMap = new HashMap<Long, Long>(); //no need for concurrent hashMap
     private static HashMap<Long, Long> pcMap = new HashMap<Long, Long>();   //calculate in place
-    private static HashMap<Long, Double> ratioMap = new HashMap<Long, Double>();
+    private static ConcurrentHashMap<Long, Double> ratioMap = new ConcurrentHashMap<Long, Double>();
     private static HashSet<Integer> distinctSet = new HashSet<Integer>(1024);
     private static ScheduledThreadPoolExecutor scheduledPersist = new ScheduledThreadPoolExecutor(RaceConfig.persistThreadNum);
 
@@ -44,8 +44,8 @@ public class PayRatioBolt implements IRichBolt {
     public void prepare(Map map, TopologyContext topologyContext, OutputCollector outputCollector) {
         this.collector = outputCollector;
         //定时存入Tair
-        /*scheduledPersist.scheduleAtFixedRate(new PersistThread(RaceConfig.prex_ratio, ratioMap),
-                RaceConfig.persistInitialDelay, RaceConfig.persitInterval, TimeUnit.SECONDS);*/
+        scheduledPersist.scheduleAtFixedRate(new PersistThread(RaceConfig.prex_ratio, ratioMap),
+                RaceConfig.persistInitialDelay, RaceConfig.persitInterval, TimeUnit.SECONDS);
         LOG.info("create bolt: " + this.toString());
         tairOperator = TairOperatorImpl.newInstance();
         prefix = RaceConfig.prex_ratio;
@@ -96,7 +96,7 @@ public class PayRatioBolt implements IRichBolt {
                 double ratio = mobileAmount/pcAmount;
                 ratioMap.put(createTime, ratio);
 
-                tairOperator.write(prefix + "_" + createTime, ratio);
+               // tairOperator.write(prefix + "_" + createTime, ratio);
             } else {
                 //无线端交易
                 Long mobileAmount = mobileMap.get(createTime);
@@ -120,7 +120,7 @@ public class PayRatioBolt implements IRichBolt {
                 }
 
                 ratioMap.put(createTime, ratio);
-                tairOperator.write(prefix + "_" +createTime, ratio);
+                //tairOperator.write(prefix + "_" +createTime, ratio);
             }
 
             distinctSet.add(paymentTuple.hashCode());

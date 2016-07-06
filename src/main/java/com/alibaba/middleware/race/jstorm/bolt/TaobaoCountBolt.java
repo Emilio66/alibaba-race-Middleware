@@ -27,7 +27,7 @@ public class TaobaoCountBolt implements IRichBolt {
     private OutputCollector collector;
     private static final Logger Log = Logger.getLogger(TaobaoCountBolt.class);
     //计数表,Long计算，存时除100.0;需要并发，bolt写，thread 读，然后存tair;
-    private static HashMap<Long, Long> hashMap = new HashMap<Long, Long>();
+    private static ConcurrentHashMap<Long, Long> hashMap = new ConcurrentHashMap<Long, Long>(); //计数表
     private static ScheduledThreadPoolExecutor scheduledPersist = new ScheduledThreadPoolExecutor(RaceConfig.persistThreadNum);
     private static HashSet<Integer> distinctSet = new HashSet<Integer>(1024);
     private TairOperatorImpl tairOperator;
@@ -36,8 +36,8 @@ public class TaobaoCountBolt implements IRichBolt {
     @Override
     public void prepare(Map map, TopologyContext topologyContext, OutputCollector outputCollector) {
         this.collector = outputCollector;
-        /*scheduledPersist.scheduleAtFixedRate( new PersistThread(RaceConfig.prex_taobao, hashMap),
-                RaceConfig.persistInitialDelay, RaceConfig.persitInterval, TimeUnit.SECONDS);*/
+        scheduledPersist.scheduleAtFixedRate( new PersistThread(false,RaceConfig.prex_taobao, hashMap),
+                RaceConfig.persistInitialDelay, RaceConfig.persitInterval, TimeUnit.SECONDS);
         this.tairOperator = TairOperatorImpl.newInstance();
         prefix = RaceConfig.prex_taobao;
     }
@@ -71,7 +71,7 @@ public class TaobaoCountBolt implements IRichBolt {
             hashMap.put(createTime, currentMoney);
             distinctSet.add(paymentTuple.hashCode());
             //save to tair directly
-            tairOperator.write(prefix + "_" +createTime, currentMoney / 100.0); //存入时，保留两位小数
+            //tairOperator.write(prefix + "_" +createTime, currentMoney / 100.0); //存入时，保留两位小数
         } else {
             Log.debug("Already processed: " + paymentTuple.hashCode() + " : " + paymentTuple);
         }
