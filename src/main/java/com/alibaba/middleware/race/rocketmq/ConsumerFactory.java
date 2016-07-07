@@ -21,7 +21,7 @@ public class ConsumerFactory {
             consumer.setInstanceName(instanceName);
             consumer.setConsumeFromWhere(ConsumeFromWhere.CONSUME_FROM_FIRST_OFFSET);
             //for better perfomance, message batch process
-            consumer.setConsumeMessageBatchMaxSize(100);
+            consumer.setConsumeMessageBatchMaxSize(1000);
         }
         return consumer;
     }
