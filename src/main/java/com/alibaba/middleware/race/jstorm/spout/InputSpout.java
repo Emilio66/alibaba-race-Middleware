@@ -96,8 +96,13 @@ public class InputSpout implements IRichSpout, MessageListenerConcurrently {
 
             LOG.info(RaceConfig.tmallStream + " stream emit " + payment);
         } else {
-            paymentBuffer.offer(payment);
-            LOG.info("No payment info, put in buffer queue: " + payment);
+            try {
+                paymentBuffer.put(payment);
+                LOG.info("No payment info, put in buffer queue: " + payment);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+                LOG.info(e.getMessage());
+            }
         }
     }
 
@@ -142,6 +147,7 @@ public class InputSpout implements IRichSpout, MessageListenerConcurrently {
                 }
 
                 OrderMessage order = RaceUtils.readKryoObject(OrderMessage.class, body);
+                LOG.info("- " + topic + " - " + RaceConfig.MqTaobaoTradeTopic);
                 //topic = msg.getTopic(); //msg topic doesn't equal queue topic
                 if (topic.equals(RaceConfig.MqTaobaoTradeTopic)) {
                     taobaoOrder.add(order.getOrderId());
