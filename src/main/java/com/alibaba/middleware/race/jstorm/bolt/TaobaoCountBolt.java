@@ -56,19 +56,21 @@ public class TaobaoCountBolt implements IRichBolt {
         //判重
         PaymentTuple paymentTuple = new PaymentTuple(orderId, payAmount, paySource, platform, createTime);
 
+        Long currentMoney;
         if (!distinctSet.contains(paymentTuple.hashCode())) {
+            synchronized (this) {
+                //Double price = payAmount / 100.0; //change to double
+                currentMoney = hashMap.get(createTime);
 
-            //Double price = payAmount / 100.0; //change to double
-            Long currentMoney = hashMap.get(createTime);
+                if (currentMoney == null)
+                    currentMoney = 0L;
+                currentMoney += payAmount;  //累加金额
+                //保留两位小数 （暂时去掉
+                // currentMoney = Arith.round(currentMoney, 2);
 
-            if (currentMoney == null)
-                currentMoney = 0L;
-            currentMoney += payAmount;  //累加金额
-            //保留两位小数 （暂时去掉
-            // currentMoney = Arith.round(currentMoney, 2);
-
-            Log.debug("TaobaoCountBolt get [min: " + createTime + ", ￥" + payAmount + ", current sum ￥ " + currentMoney + "]");
-            hashMap.put(createTime, currentMoney);
+                Log.debug("TaobaoCountBolt get [min: " + createTime + ", ￥" + payAmount + ", current sum ￥ " + currentMoney + "]");
+                hashMap.put(createTime, currentMoney);
+            }
             distinctSet.add(paymentTuple);
             //save to tair directly
             tairOperator.write(prefix + "_" +createTime, currentMoney / 100.0); //存入时，保留两位小数

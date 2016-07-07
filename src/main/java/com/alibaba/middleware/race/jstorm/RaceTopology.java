@@ -36,7 +36,8 @@ public class RaceTopology {
         int count_Parallelism_hint = 7;
 //        LocalCluster cluster = new LocalCluster();
 //建议加上这行，使得每个bolt/spout的并发度都为1
-//        conf.put(Config.TOPOLOGY_MAX_TASK_PARALLELISM, 1);
+        //conf.put(Config.TOPOLOGY_MAX_TASK_PARALLELISM, 1);
+
 
         TopologyBuilder builder = new TopologyBuilder();
 

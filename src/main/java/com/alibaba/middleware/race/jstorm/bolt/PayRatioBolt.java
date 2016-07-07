@@ -74,52 +74,57 @@ public class PayRatioBolt implements IRichBolt {
 
         if (!distinctSet.contains(paymentTuple)) {
             //pc
+            double ratio;
             if (platform == 0) {
-                Long pcAmount = pcMap.get(createTime);
-                if (pcAmount == null) {
+                synchronized (this) {
+                    Long pcAmount = pcMap.get(createTime);
+                    if (pcAmount == null) {
 
-                    //上一分钟的历史交易额作为起点
-                    if ((pcAmount = pcMap.get(createTime - 60)) == null) {
-                        pcAmount = 0L;
+                        //上一分钟的历史交易额作为起点
+                        if ((pcAmount = pcMap.get(createTime - 60)) == null) {
+                            pcAmount = 0L;
+                        }
+
                     }
 
+                    pcAmount += payAmount; //加上历史交易作为总交易额
+                    pcMap.put(createTime, pcAmount);
+
+                    //计算比值
+                    Long mobileAmount = mobileMap.get(createTime);
+                    if (mobileAmount == null)
+                        mobileAmount = 0L;
+                    //double ratio = Arith.div(mobileAmount * 1.0, pcAmount * 1.0, 2);//精确除法,保留2位
+                    ratio = mobileAmount / pcAmount;
+                    ratioMap.put(createTime, ratio);
                 }
-
-                pcAmount += payAmount; //加上历史交易作为总交易额
-                pcMap.put(createTime, pcAmount);
-
-                //计算比值
-                Long mobileAmount = mobileMap.get(createTime);
-                if (mobileAmount == null)
-                    mobileAmount = 0L;
-                //double ratio = Arith.div(mobileAmount * 1.0, pcAmount * 1.0, 2);//精确除法,保留2位
-                double ratio = mobileAmount/pcAmount;
-                ratioMap.put(createTime, ratio);
 
                 tairOperator.write(prefix + "_" + createTime, ratio);
             } else {
                 //无线端交易
-                Long mobileAmount = mobileMap.get(createTime);
-                if (mobileAmount == null) {
+                synchronized (this) {
+                    Long mobileAmount = mobileMap.get(createTime);
+                    if (mobileAmount == null) {
 
-                    //上一分钟的历史交易额作为起点
-                    if ((mobileAmount = mobileMap.get(createTime - 60)) == null) {
-                        mobileAmount = 0L;
+                        //上一分钟的历史交易额作为起点
+                        if ((mobileAmount = mobileMap.get(createTime - 60)) == null) {
+                            mobileAmount = 0L;
+                        }
                     }
+
+                    mobileAmount += payAmount; //加上历史交易作为总交易额
+                    mobileMap.put(createTime, mobileAmount);
+
+                    //计算比值
+                    Long pcAmount = pcMap.get(createTime);
+                    ratio = Double.MAX_VALUE; //pc 端为 0， 比值无限大
+                    if (pcAmount != null) {
+                        // ratio = Arith.div(mobileAmount * 1.0, pcAmount * 1.0, 2);//精确除法,保留2位
+                        ratio = mobileAmount * 1.0 / pcAmount;
+                    }
+
+                    ratioMap.put(createTime, ratio);
                 }
-
-                mobileAmount += payAmount; //加上历史交易作为总交易额
-                mobileMap.put(createTime, mobileAmount);
-
-                //计算比值
-                Long pcAmount = pcMap.get(createTime);
-                Double ratio = Double.MAX_VALUE; //pc 端为 0， 比值无限大
-                if (pcAmount != null) {
-                   // ratio = Arith.div(mobileAmount * 1.0, pcAmount * 1.0, 2);//精确除法,保留2位
-                    ratio = mobileAmount * 1.0 / pcAmount;
-                }
-
-                ratioMap.put(createTime, ratio);
                 tairOperator.write(prefix + "_" +createTime, ratio);
             }
 
