@@ -7,15 +7,12 @@ public class RaceConfig implements Serializable {
     //自己添加的
     public static String teamCode           = "424452my9i";  //新要求，加入teamcode进行区分，注意结尾有下划线
 
-    public static String groupName          = "singularity";
-    public static String nameServer         = "127.0.0.1:9876";
     public static boolean isFlowControl     = false; //调优用, 流量控制，消息缓存
     public static boolean autoACK           = true; //调优用，自动ACK
     public static int     maxFailTime       = 4;    //调优用，重试次数
     public static int     persistThreadNum  = 1;
     public static int     persitInterval    = 5;    //seconds
     public static int     persistInitialDelay   = 10;   //seconds, 启动后延迟一段时间再开始执行
-    //public static String
 
     //这些是写tair key的前缀
     public static String  prex_tmall            = "platformTmall_"+teamCode;

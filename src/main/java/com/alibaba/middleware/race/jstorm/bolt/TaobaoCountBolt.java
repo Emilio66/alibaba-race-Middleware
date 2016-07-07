@@ -29,7 +29,7 @@ public class TaobaoCountBolt implements IRichBolt {
     //计数表,Long计算，存时除100.0;需要并发，bolt写，thread 读，然后存tair;
     private static HashMap<Long, Long> hashMap = new HashMap<Long, Long>();
     private static ScheduledThreadPoolExecutor scheduledPersist = new ScheduledThreadPoolExecutor(RaceConfig.persistThreadNum);
-    private static HashSet<Integer> distinctSet = new HashSet<Integer>(1024);
+    private static HashSet<PaymentTuple> distinctSet = new HashSet<PaymentTuple>(1024);
     private TairOperatorImpl tairOperator;
     private String prefix;
 
@@ -69,7 +69,7 @@ public class TaobaoCountBolt implements IRichBolt {
 
             Log.debug("TaobaoCountBolt get [min: " + createTime + ", ￥" + payAmount + ", current sum ￥ " + currentMoney + "]");
             hashMap.put(createTime, currentMoney);
-            distinctSet.add(paymentTuple.hashCode());
+            distinctSet.add(paymentTuple);
             //save to tair directly
             tairOperator.write(prefix + "_" +createTime, currentMoney / 100.0); //存入时，保留两位小数
         } else {

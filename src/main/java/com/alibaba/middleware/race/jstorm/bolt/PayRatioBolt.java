@@ -34,7 +34,7 @@ public class PayRatioBolt implements IRichBolt {
     private static HashMap<Long, Long> mobileMap = new HashMap<Long, Long>(); //no need for concurrent hashMap
     private static HashMap<Long, Long> pcMap = new HashMap<Long, Long>();   //calculate in place
     private static HashMap<Long, Double> ratioMap = new HashMap<Long, Double>();
-    private static HashSet<Integer> distinctSet = new HashSet<Integer>(1024);
+    private static HashSet<PaymentTuple> distinctSet = new HashSet<PaymentTuple>(1024);
     private static ScheduledThreadPoolExecutor scheduledPersist = new ScheduledThreadPoolExecutor(RaceConfig.persistThreadNum);
 
     private TairOperatorImpl tairOperator;
@@ -72,7 +72,7 @@ public class PayRatioBolt implements IRichBolt {
         //判重
         PaymentTuple paymentTuple = new PaymentTuple(orderId, payAmount, paySource, platform, createTime);
 
-        if (!distinctSet.contains(paymentTuple.hashCode())) {
+        if (!distinctSet.contains(paymentTuple)) {
             //pc
             if (platform == 0) {
                 Long pcAmount = pcMap.get(createTime);
@@ -123,7 +123,7 @@ public class PayRatioBolt implements IRichBolt {
                 tairOperator.write(prefix + "_" +createTime, ratio);
             }
 
-            distinctSet.add(paymentTuple.hashCode());
+            distinctSet.add(paymentTuple);
         }
         collector.ack(tuple);
     }

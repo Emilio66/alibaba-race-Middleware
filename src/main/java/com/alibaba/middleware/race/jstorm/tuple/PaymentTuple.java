@@ -77,11 +77,31 @@ public class PaymentTuple implements Serializable {
 
     @Override
     public int hashCode() {
+        //1000w订单，10*2^20
         //int 10位: createTime 10 位,1467xxx, paySource 0-3, payAmount < 100
-        int shortOrderId = (int)(0X3FFFFFFFL | orderId); //trim 30 bit, i.e 9 digit
-        long hashCode = shortOrderId | payAmount | (paySource << 8) | (payPlatform << 9) | createTime;
+        int shortOrderId = (int)(0XFFFFFFFL & orderId); //trim 28 bit, i.e 9 digit
+        int shortTime = (int)(0X0FFFFFFFL & createTime);//10位取7位
+        //System.out.println("shortOrderId "+shortOrderId+" paysource left: "+ (paySource << 8)+ " platform left "+ (payPlatform << 9));
+        long hashCode = shortOrderId | shortTime | payAmount | (paySource << 10) | (payPlatform << 11) ;
         return (int)hashCode;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        PaymentTuple that = (PaymentTuple) o;
+
+        if (createTime != that.createTime) return false;
+        if (orderId != that.orderId) return false;
+        if (payAmount != that.payAmount) return false;
+        if (payPlatform != that.payPlatform) return false;
+        if (paySource != that.paySource) return false;
+
+        return true;
+    }
+
     @Override
     public String toString() {
 	return "paymentTuple: { id: "+orderId+" ￥"+payAmount+", paySource: "+paySource+", payPlatform: "

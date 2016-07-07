@@ -30,7 +30,7 @@ public class TmallCountBolt implements IRichBolt {
     private static final Logger Log = Logger.getLogger(TmallCountBolt.class);
     private static HashMap<Long, Long> hashMap = new HashMap<Long, Long>(); //计数表
     private static ScheduledThreadPoolExecutor scheduledPersist = new ScheduledThreadPoolExecutor(RaceConfig.persistThreadNum);//定时存入Tair
-    private static HashSet<Integer> distinctSet = new HashSet<Integer>(1024);
+    private static HashSet<PaymentTuple> distinctSet = new HashSet<PaymentTuple>(1024);
     private TairOperatorImpl tairOperator;
     private String prefix;
     @Override
@@ -69,7 +69,7 @@ public class TmallCountBolt implements IRichBolt {
 
             Log.debug("TmallCountBolt get [min: " + createTime + ", ￥" + payAmount + ", current sum ￥ " + currentMoney + "]");
             hashMap.put(createTime, currentMoney);
-            distinctSet.add(paymentTuple.hashCode());
+            distinctSet.add(paymentTuple);
             tairOperator.write(prefix + "_" +createTime, currentMoney / 100.0);
         }
         collector.ack(tuple);

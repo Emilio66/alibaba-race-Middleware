@@ -33,7 +33,7 @@ public class RaceTopology {
         // conf.put("user.defined.logback.conf", "classpath:logback.xml");
         int spout_Parallelism_hint = 1;
         int dispatch_Parallelism_hint = 1;
-        int count_Parallelism_hint = 1;
+        int count_Parallelism_hint = 7;
 //        LocalCluster cluster = new LocalCluster();
 //建议加上这行，使得每个bolt/spout的并发度都为1
 //        conf.put(Config.TOPOLOGY_MAX_TASK_PARALLELISM, 1);
