@@ -41,4 +41,6 @@ public class RaceConfig implements Serializable {
     public static String tmallStream = "tmall";
     public static String taobaoStream = "taobao";
     public static String payStream = "pay";
+
+    public static String InputSpoutNsame = "SOURCE";
 }
