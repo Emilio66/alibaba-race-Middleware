@@ -28,7 +28,7 @@ import java.util.concurrent.TimeUnit;
 public class TmallCountBolt implements IRichBolt {
     private OutputCollector collector;
     private static final Logger Log = Logger.getLogger(TmallCountBolt.class);
-    private static ConcurrentHashMap<Long, Long> hashMap = new ConcurrentHashMap<Long, Long>(); //计数表
+    private static HashMap<Long, Long> hashMap = new HashMap<Long, Long>(); //计数表
     private static ScheduledThreadPoolExecutor scheduledPersist = new ScheduledThreadPoolExecutor(RaceConfig.persistThreadNum);//定时存入Tair
     private static HashSet<Integer> distinctSet = new HashSet<Integer>(1024);
     private TairOperatorImpl tairOperator;
@@ -36,8 +36,8 @@ public class TmallCountBolt implements IRichBolt {
     @Override
     public void prepare(Map map, TopologyContext topologyContext, OutputCollector outputCollector) {
         this.collector = outputCollector;
-        scheduledPersist.scheduleAtFixedRate( new PersistThread(false,RaceConfig.prex_tmall, hashMap),
-                RaceConfig.persistInitialDelay, RaceConfig.persitInterval, TimeUnit.SECONDS);
+        /*scheduledPersist.scheduleAtFixedRate( new PersistThread(RaceConfig.prex_tmall, hashMap),
+                RaceConfig.persistInitialDelay, RaceConfig.persitInterval, TimeUnit.SECONDS);*/
         tairOperator = TairOperatorImpl.newInstance();
         prefix = RaceConfig.prex_tmall;
     }
@@ -70,7 +70,7 @@ public class TmallCountBolt implements IRichBolt {
          //   Log.debug("TmallCountBolt get [min: " + createTime + ", ￥" + payAmount + ", current sum ￥ " + currentMoney + "]");
             hashMap.put(createTime, currentMoney);
             distinctSet.add(paymentTuple.hashCode());
-            //tairOperator.write(prefix + "_" +createTime, currentMoney / 100.0);
+            tairOperator.write(prefix + "_" +createTime, currentMoney / 100.0);
         }
         collector.ack(tuple);
     }
