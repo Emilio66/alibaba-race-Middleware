@@ -86,7 +86,7 @@ public class InputSpout implements IRichSpout, MessageListenerConcurrently {
             PaymentTuple payment = paymentBuffer.take();
             sendTuple(payment);
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            LOG.info(e.getMessage());
         }
     }
 
@@ -102,7 +102,6 @@ public class InputSpout implements IRichSpout, MessageListenerConcurrently {
             LOG.info(RaceConfig.tmallStream + " stream emit " + payment);
         } else {
             paymentBuffer.offer(payment);
-
             LOG.info("No payment info, put in buffer queue: " + payment);
         }
     }
