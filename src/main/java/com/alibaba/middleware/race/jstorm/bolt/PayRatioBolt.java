@@ -66,7 +66,7 @@ public class PayRatioBolt implements IRichBolt {
         short platform = tuple.getShort(3);
         long createTime = tuple.getLong(4);
 
-        LOG.debug("PayRatioBolt get [order ID: " + orderId + ", time: " + createTime
+        LOG.info("PayRatioBolt get [order ID: " + orderId + ", time: " + createTime
                 + " ￥" + payAmount + " ]");
 
         //判重

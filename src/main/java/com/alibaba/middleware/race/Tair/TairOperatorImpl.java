@@ -23,7 +23,7 @@ public class TairOperatorImpl {
                             String slaveConfigServer,
                             String groupName,
                             int namespace) {
-        LOG.debug(" new tair operator "+masterConfigServer+", "+slaveConfigServer
+        LOG.info(" new tair operator "+masterConfigServer+", "+slaveConfigServer
                 +", "+groupName+", namespace"+namespace);
 
         this.namespace = namespace;
@@ -42,7 +42,7 @@ public class TairOperatorImpl {
     }
 
     public boolean write(Serializable key, Serializable value) {
-        LOG.debug("write data [ "+key+" : "+value+" ]");
+        LOG.info("write data [ "+key+" : "+value+" ]");
      //   tairManager.put(namespace, key, value);
         return false;
     }

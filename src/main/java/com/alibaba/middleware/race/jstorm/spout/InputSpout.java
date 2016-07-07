@@ -68,7 +68,7 @@ public class InputSpout implements IRichSpout, MessageListenerConcurrently {
             consumer.start();       //!!启动consumer, 一定不能缺少！
 
             LOG.info("successfully create consumer " + consumer.getInstanceName());
-            LOG.debug("consumer nameServerAddress: " + consumer.getNamesrvAddr());
+            LOG.info("consumer nameServerAddress: " + consumer.getNamesrvAddr());
         } catch (MQClientException e) {
             LOG.error("Failed to create Consumer subscription ", e);
             e.printStackTrace();
@@ -129,7 +129,7 @@ public class InputSpout implements IRichSpout, MessageListenerConcurrently {
 
                 // second join with orderId to determine whether its for tmall or taobao
                 sendTuple(payment);
-                LOG.debug("consuemr get pay - " + msg.getTopic() + " message [order ID: " + payment.getOrderId()
+                LOG.info("consuemr get pay - " + msg.getTopic() + " message [order ID: " + payment.getOrderId()
                         + ", time: " + payment.getCreateTime()
                         + " ￥" + payment.getPayAmount() + " ]");
             }
@@ -145,11 +145,11 @@ public class InputSpout implements IRichSpout, MessageListenerConcurrently {
                 //topic = msg.getTopic(); //msg topic doesn't equal queue topic
                 if (topic.equals(RaceConfig.MqTaobaoTradeTopic)) {
                     taobaoOrder.add(order.getOrderId());
-                    LOG.debug("consuemr get taobao - " + msg.getTopic() + " message [order ID: " + order.getOrderId()
+                    LOG.info("consuemr get taobao - " + msg.getTopic() + " message [order ID: " + order.getOrderId()
                             + " ]");
                 } else {
                     tmallOrder.add(order.getOrderId());
-                    LOG.debug("consuemr get tmall- " + msg.getTopic() + " message [order ID: " + order.getOrderId()
+                    LOG.info("consuemr get tmall- " + msg.getTopic() + " message [order ID: " + order.getOrderId()
                             + " ]");
                 }
             }

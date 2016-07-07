@@ -63,7 +63,7 @@ public class RaceTopology {
             String topologyName = RaceConfig.JstormTopologyName;
                StormSubmitter.submitTopology(topologyName, conf, builder.createTopology());
             // TairClient 2.3.5: init config failed.submitTopology(topologyName, conf, builder.createTopology());
-            LOG.debug("Succesfully start topology with config: " + conf);
+            LOG.info("Succesfully start topology with config: " + conf);
         } catch (Exception e) {
             LOG.info("Submit topology error!!", e);
             e.printStackTrace();
