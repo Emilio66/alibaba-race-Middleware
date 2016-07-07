@@ -31,7 +31,7 @@ public class RaceTopology {
         Config conf = new Config();
         conf.put("TOPOLOGY_WORKERS",4);
         // conf.put("user.defined.logback.conf", "classpath:logback.xml");
-        int spout_Parallelism_hint = 2;
+        int spout_Parallelism_hint = 1;
         int dispatch_Parallelism_hint = 1;
         int count_Parallelism_hint = 7;
 //        LocalCluster cluster = new LocalCluster();
