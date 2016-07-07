@@ -12,6 +12,7 @@ import com.alibaba.middleware.race.RaceUtils;
 import com.alibaba.middleware.race.jstorm.tuple.PaymentTuple;
 import com.alibaba.middleware.race.model.OrderMessage;
 import com.alibaba.middleware.race.model.PaymentMessage;
+import com.alibaba.middleware.race.rocketmq.ConsumerFactory;
 import com.alibaba.rocketmq.client.consumer.DefaultMQPushConsumer;
 import com.alibaba.rocketmq.client.consumer.listener.ConsumeConcurrentlyContext;
 import com.alibaba.rocketmq.client.consumer.listener.ConsumeConcurrentlyStatus;
@@ -56,13 +57,7 @@ public class InputSpout implements IRichSpout, MessageListenerConcurrently {
         tmallOrder = new HashSet<Long>();
         taobaoOrder = new HashSet<Long>();
 
-        String instanceName = RaceConfig.MetaConsumerGroup + "@" + JStormUtils.process_pid();
-        consumer = new DefaultMQPushConsumer(RaceConfig.MetaConsumerGroup);
-//        consumer.setNamesrvAddr(System.getenv("NAMESRV_ADDR"));//(RaceConfig.nameServer);
-        consumer.setInstanceName(instanceName);
-        consumer.setConsumeFromWhere(ConsumeFromWhere.CONSUME_FROM_FIRST_OFFSET);
-        //for better perfomance, message batch process
-        consumer.setConsumeMessageBatchMaxSize(100);
+        consumer = ConsumerFactory.getInstance();
 
         try {
             consumer.subscribe(RaceConfig.MqPayTopic, "*"); //订阅支付消息的所有tag *
@@ -72,7 +67,7 @@ public class InputSpout implements IRichSpout, MessageListenerConcurrently {
             consumer.registerMessageListener(this); //设置消息监听器, consumeMessage()实现消息处理逻辑
             consumer.start();       //!!启动consumer, 一定不能缺少！
 
-            LOG.info("successfully create consumer " + instanceName);
+            LOG.info("successfully create consumer " + consumer.getInstanceName());
             LOG.debug("consumer nameServerAddress: " + consumer.getNamesrvAddr());
         } catch (MQClientException e) {
             LOG.error("Failed to create Consumer subscription ", e);
