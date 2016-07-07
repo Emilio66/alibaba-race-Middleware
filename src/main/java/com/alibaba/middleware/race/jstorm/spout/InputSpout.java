@@ -98,6 +98,7 @@ public class InputSpout implements IRichSpout, MessageListenerConcurrently {
         } else {
             try {
                 paymentBuffer.put(payment);
+                Thread.sleep(100);
                 LOG.info("No payment info, put in buffer queue: " + payment);
             } catch (InterruptedException e) {
                 e.printStackTrace();
