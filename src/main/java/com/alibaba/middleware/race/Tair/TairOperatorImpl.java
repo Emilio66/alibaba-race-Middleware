@@ -34,7 +34,7 @@ public class TairOperatorImpl {
 
         tairManager.setConfigServerList(cs);
         tairManager.setGroupName(groupName);
-        tairManager.init();
+       // tairManager.init(); //  tair暂时不接上，先测通
     }
     public static TairOperatorImpl newInstance(){
         return new TairOperatorImpl(RaceConfig.TairConfigServer, RaceConfig.TairSalveConfigServer,
@@ -43,7 +43,7 @@ public class TairOperatorImpl {
 
     public boolean write(Serializable key, Serializable value) {
         LOG.debug("write data [ "+key+" : "+value+" ]");
-        tairManager.put(namespace, key, value);
+     //   tairManager.put(namespace, key, value);
         return false;
     }
 

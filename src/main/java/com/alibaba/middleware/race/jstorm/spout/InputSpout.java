@@ -58,7 +58,7 @@ public class InputSpout implements IRichSpout, MessageListenerConcurrently {
 
         String instanceName = RaceConfig.MetaConsumerGroup + "@" + JStormUtils.process_pid();
         consumer = new DefaultMQPushConsumer(RaceConfig.MetaConsumerGroup);
-        consumer.setNamesrvAddr(System.getenv("NAMESRV_ADDR"));//(RaceConfig.nameServer);
+//        consumer.setNamesrvAddr(System.getenv("NAMESRV_ADDR"));//(RaceConfig.nameServer);
         consumer.setInstanceName(instanceName);
         consumer.setConsumeFromWhere(ConsumeFromWhere.CONSUME_FROM_FIRST_OFFSET);
         //for better perfomance, message batch process
@@ -94,16 +94,16 @@ public class InputSpout implements IRichSpout, MessageListenerConcurrently {
         if (taobaoOrder.contains(payment.getOrderId())) {
             collector.emit(RaceConfig.taobaoStream, new Values(payment.getOrderId(), payment.getPayAmount(),
                     payment.getPaySource(), payment.getPayPlatform(), payment.getCreateTime()));
-           // LOG.info(RaceConfig.taobaoStream + " stream emit " + payment);
+            LOG.info(RaceConfig.taobaoStream + " stream emit " + payment);
         } else if (tmallOrder.contains(payment.getOrderId())) {
             collector.emit(RaceConfig.tmallStream, new Values(payment.getOrderId(), payment.getPayAmount(),
                     payment.getPaySource(), payment.getPayPlatform(), payment.getCreateTime()));
 
-          //  LOG.info(RaceConfig.tmallStream + " stream emit " + payment);
+            LOG.info(RaceConfig.tmallStream + " stream emit " + payment);
         } else {
             paymentBuffer.offer(payment);
 
-          //  LOG.info("No payment info, put in buffer queue: " + payment);
+            LOG.info("No payment info, put in buffer queue: " + payment);
         }
     }
 
@@ -135,9 +135,9 @@ public class InputSpout implements IRichSpout, MessageListenerConcurrently {
 
                 // second join with orderId to determine whether its for tmall or taobao
                 sendTuple(payment);
-               /* LOG.debug("consuemr get pay - " + msg.getTopic() + " message [order ID: " + payment.getOrderId()
+                LOG.debug("consuemr get pay - " + msg.getTopic() + " message [order ID: " + payment.getOrderId()
                         + ", time: " + payment.getCreateTime()
-                        + " ￥" + payment.getPayAmount() + " ]");*/
+                        + " ￥" + payment.getPayAmount() + " ]");
             }
         } else {
             for (MessageExt msg : msgList) {
@@ -151,12 +151,12 @@ public class InputSpout implements IRichSpout, MessageListenerConcurrently {
                 //topic = msg.getTopic(); //msg topic doesn't equal queue topic
                 if (topic.equals(RaceConfig.MqTaobaoTradeTopic)) {
                     taobaoOrder.add(order.getOrderId());
-               //     LOG.debug("consuemr get taobao - " + msg.getTopic() + " message [order ID: " + order.getOrderId()
-               //             + " ]");
+                    LOG.debug("consuemr get taobao - " + msg.getTopic() + " message [order ID: " + order.getOrderId()
+                            + " ]");
                 } else {
                     tmallOrder.add(order.getOrderId());
-                //    LOG.debug("consuemr get tmall- " + msg.getTopic() + " message [order ID: " + order.getOrderId()
-                //            + " ]");
+                    LOG.debug("consuemr get tmall- " + msg.getTopic() + " message [order ID: " + order.getOrderId()
+                            + " ]");
                 }
             }
         }

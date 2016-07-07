@@ -67,7 +67,7 @@ public class TmallCountBolt implements IRichBolt {
             //保留两位小数 （暂时去掉
             // currentMoney = Arith.round(currentMoney, 2);
 
-         //   Log.debug("TmallCountBolt get [min: " + createTime + ", ￥" + payAmount + ", current sum ￥ " + currentMoney + "]");
+            Log.debug("TmallCountBolt get [min: " + createTime + ", ￥" + payAmount + ", current sum ￥ " + currentMoney + "]");
             hashMap.put(createTime, currentMoney);
             distinctSet.add(paymentTuple.hashCode());
             tairOperator.write(prefix + "_" +createTime, currentMoney / 100.0);

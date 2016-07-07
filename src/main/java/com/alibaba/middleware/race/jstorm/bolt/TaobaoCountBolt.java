@@ -67,7 +67,7 @@ public class TaobaoCountBolt implements IRichBolt {
             //保留两位小数 （暂时去掉
             // currentMoney = Arith.round(currentMoney, 2);
 
-           // Log.debug("TaobaoCountBolt get [min: " + createTime + ", ￥" + payAmount + ", current sum ￥ " + currentMoney + "]");
+            Log.debug("TaobaoCountBolt get [min: " + createTime + ", ￥" + payAmount + ", current sum ￥ " + currentMoney + "]");
             hashMap.put(createTime, currentMoney);
             distinctSet.add(paymentTuple.hashCode());
             //save to tair directly
