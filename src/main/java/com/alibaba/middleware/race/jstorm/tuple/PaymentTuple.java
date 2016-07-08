@@ -23,7 +23,7 @@ public class PaymentTuple implements Serializable {
         this.payAmount = (long)(msg.getPayAmount() * 100);
         this.paySource = msg.getPaySource();
         this.payPlatform = msg.getPayPlatform();
-        this.createTime = msg.getCreateTime() / 60000 * 60;
+        this.createTime = msg.getCreateTime() / 60000;
     }
 
     public PaymentTuple(long orderId, long payAmount, short paySource,
