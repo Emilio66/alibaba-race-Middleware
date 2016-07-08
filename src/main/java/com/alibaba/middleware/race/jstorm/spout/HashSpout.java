@@ -131,11 +131,11 @@ public class HashSpout implements IRichSpout, MessageListenerConcurrently {
 
     @Override
     public void ack(Object o) {
-        LOG.info("InputSpout ack " + o);
+        LOG.info("HashSpout ack " + o);
     }
 
     @Override
     public void fail(Object o) {
-        LOG.info("InputSpout fail !!  " + o);
+        LOG.info("HashSpout fail !!  " + o);
     }
 }
