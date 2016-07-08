@@ -79,11 +79,11 @@ public class PaymentTuple implements Serializable {
     public int hashCode() {
         //1000w订单，10*2^20
         //int 10位: createTime 10 位,1467xxx, paySource 0-3, payAmount < 100
-        int shortOrderId = (int)(0XFFFFFFFL & orderId); //trim 28 bit, i.e 9 digit
+        /*int shortOrderId = (int)(0XFFFFFFFL & orderId); //trim 28 bit, i.e 9 digit
         int shortTime = (int)(0X0FFFFFFFL & createTime);//10位取7位
         //System.out.println("shortOrderId "+shortOrderId+" paysource left: "+ (paySource << 8)+ " platform left "+ (payPlatform << 9));
-        long hashCode = shortOrderId | shortTime | payAmount | (paySource << 10) | (payPlatform << 11) ;
-        return (int)hashCode;
+        long hashCode = shortOrderId | shortTime | payAmount | (paySource << 10) | (payPlatform << 11) ;*/
+        return (int)orderId;    //contains 会在hashcode相同的情况下，检查equals()是否为true
     }
 
     @Override

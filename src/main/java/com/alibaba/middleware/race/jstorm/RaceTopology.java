@@ -60,8 +60,8 @@ public class RaceTopology {
 
         //pay ratio process (receive two streams: tmall stream, taobao stream, field grouping by minute)
         builder.setBolt(RaceConfig.RatioCountBoltName, new PayRatioBolt(), count_Parallelism_hint).
-                fieldsGrouping(RaceConfig.TBCountBoltName, new Fields("minute")).
-                fieldsGrouping(RaceConfig.TMCountBoltName, new Fields("minute"));
+                fieldsGrouping(RaceConfig.TBDispatchBoltName, new Fields("minute")).
+                fieldsGrouping(RaceConfig.TMDispatchBoltName, new Fields("minute"));
 
         try {
             String topologyName = RaceConfig.JstormTopologyName;
