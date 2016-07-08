@@ -40,7 +40,7 @@ public class HashSpout implements IRichSpout, MessageListenerConcurrently {
     public void open(Map map, TopologyContext topologyContext, SpoutOutputCollector spoutOutputCollector) {
         collector = spoutOutputCollector;
 
-        consumer = ConsumerFactory.getInstance(JStormUtils.process_pid());
+        consumer = ConsumerFactory.getInstance("JStormUtils.process_pid()");
 
         try {
             consumer.subscribe(RaceConfig.MqPayTopic, "*"); //订阅支付消息的所有tag *
