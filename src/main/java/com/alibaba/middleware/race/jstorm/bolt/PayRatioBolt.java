@@ -28,15 +28,13 @@ import java.util.concurrent.TimeUnit;
  * 3. 将两个 hashMap 这一分钟的值相除，取两位小数存入 hashMap （可以在存入tair的时候统一计算ratio
  */
 public class PayRatioBolt implements IRichBolt {
-    private OutputCollector collector;
+
     public static final Logger LOG = Logger.getLogger(PayRatioBolt.class);
+    private OutputCollector collector;
 
-    private static HashMap<Long, Long> mobileMap = new HashMap<Long, Long>(); //no need for concurrent hashMap
-    private static HashMap<Long, Long> pcMap = new HashMap<Long, Long>();   //calculate in place
-    private static HashMap<Long, Double> ratioMap = new HashMap<Long, Double>();
-    private static HashSet<PaymentTuple> distinctSet = new HashSet<PaymentTuple>(1024);
-    private static ScheduledThreadPoolExecutor scheduledPersist = new ScheduledThreadPoolExecutor(RaceConfig.persistThreadNum);
-
+    private HashMap<Long, Long> mobileMap = new HashMap<Long, Long>();  //no need for concurrent hashMap
+    private HashMap<Long, Long> pcMap = new HashMap<Long, Long>();      //calculate in place (in one thread
+    private HashMap<Long, Double> ratioMap = new HashMap<Long, Double>();
     private TairOperatorImpl tairOperator;
     private String prefix;
 
@@ -46,7 +44,7 @@ public class PayRatioBolt implements IRichBolt {
         //定时存入Tair
         /*scheduledPersist.scheduleAtFixedRate(new PersistThread(RaceConfig.prex_ratio, ratioMap),
                 RaceConfig.persistInitialDelay, RaceConfig.persitInterval, TimeUnit.SECONDS);*/
-        LOG.info("create bolt: " + this.toString());
+        LOG.info("create ratio bolt: " + this.toString());
         tairOperator = TairOperatorImpl.newInstance();
         prefix = RaceConfig.prex_ratio;
     }
@@ -58,80 +56,65 @@ public class PayRatioBolt implements IRichBolt {
      */
     @Override
     public void execute(Tuple tuple) {
-
-        //按照field 顺序得到payment 内容
-        long orderId = tuple.getLong(0);
+        long createTime = tuple.getLong(0) * 60; //1st second stands for this minute
         long payAmount = tuple.getLong(1);
-        short paySource = tuple.getShort(2);
-        short platform = tuple.getShort(3);
-        long createTime = tuple.getLong(4);
+        short platform = tuple.getShort(2);
 
-        LOG.info("PayRatioBolt get [order ID: " + orderId + ", time: " + createTime
-                + " $" + payAmount + " ]");
+        LOG.info("PayRatioBolt get [ minute: " + createTime + " ￥" + payAmount + "                , platform: " + platform + " ]");
 
-        //判重
-        PaymentTuple paymentTuple = new PaymentTuple(orderId, payAmount, paySource, platform, createTime);
+        double ratio;
+        //pc payment
+        if (platform == 0) {
+            Long pcAmount = pcMap.get(createTime);
+            if (pcAmount == null) {
 
-        if (!distinctSet.contains(paymentTuple)) {
-            //pc
-            double ratio;
-            if (platform == 0) {
-                synchronized (this) {
-                    Long pcAmount = pcMap.get(createTime);
-                    if (pcAmount == null) {
-
-                        //上一分钟的历史交易额作为起点
-                        if ((pcAmount = pcMap.get(createTime - 60)) == null) {
-                            pcAmount = 0L;
-                        }
-
-                    }
-
-                    pcAmount += payAmount; //加上历史交易作为总交易额
-                    pcMap.put(createTime, pcAmount);
-
-                    //计算比值
-                    Long mobileAmount = mobileMap.get(createTime);
-                    if (mobileAmount == null)
-                        mobileAmount = 0L;
-                    //double ratio = Arith.div(mobileAmount * 1.0, pcAmount * 1.0, 2);//精确除法,保留2位
-                    ratio = mobileAmount / pcAmount;
-                    ratioMap.put(createTime, ratio);
+                //上一分钟的历史交易额作为起点
+                if ((pcAmount = pcMap.get(createTime - 60)) == null) {
+                    pcAmount = 0L;
                 }
 
-                tairOperator.write(prefix + "_" + createTime, ratio);
-            } else {
-                //无线端交易
-                synchronized (this) {
-                    Long mobileAmount = mobileMap.get(createTime);
-                    if (mobileAmount == null) {
-
-                        //上一分钟的历史交易额作为起点
-                        if ((mobileAmount = mobileMap.get(createTime - 60)) == null) {
-                            mobileAmount = 0L;
-                        }
-                    }
-
-                    mobileAmount += payAmount; //加上历史交易作为总交易额
-                    mobileMap.put(createTime, mobileAmount);
-
-                    //计算比值
-                    Long pcAmount = pcMap.get(createTime);
-                    ratio = Double.MAX_VALUE; //pc 端为 0， 比值无限大
-                    if (pcAmount != null) {
-                        // ratio = Arith.div(mobileAmount * 1.0, pcAmount * 1.0, 2);//精确除法,保留2位
-                        ratio = mobileAmount * 1.0 / pcAmount;
-                    }
-
-                    ratioMap.put(createTime, ratio);
-                }
-                tairOperator.write(prefix + "_" +createTime, ratio);
             }
 
-            distinctSet.add(paymentTuple);
+            pcAmount += payAmount; //加上历史交易作为总交易额
+            pcMap.put(createTime, pcAmount);
+
+            //计算比值
+            Long mobileAmount = mobileMap.get(createTime);
+            if (mobileAmount == null)
+                mobileAmount = 0L;
+            //double ratio = Arith.div(mobileAmount * 1.0, pcAmount * 1.0, 2);//精确除法,保留2位
+            ratio = mobileAmount / pcAmount;
+            ratioMap.put(createTime, ratio);
+
+        } else {
+            //无线端交易
+            Long mobileAmount = mobileMap.get(createTime);
+            if (mobileAmount == null) {
+
+                //上一分钟的历史交易额作为起点
+                if ((mobileAmount = mobileMap.get(createTime - 60)) == null) {
+                    mobileAmount = 0L;
+                }
+            }
+
+            mobileAmount += payAmount; //加上历史交易作为总交易额
+            mobileMap.put(createTime, mobileAmount);
+
+            //计算比值
+            Long pcAmount = pcMap.get(createTime);
+            ratio = Double.MAX_VALUE; //pc 端为 0， 比值无限大
+            if (pcAmount != null) {
+                // ratio = Arith.div(mobileAmount * 1.0, pcAmount * 1.0, 2);//精确除法,保留2位
+                ratio = mobileAmount * 1.0 / pcAmount;
+            }
+
+            ratioMap.put(createTime, ratio);
         }
+        //persist
+        tairOperator.write(prefix + "_" + createTime, ratio);
         collector.ack(tuple);
     }
+
 
     @Override
     public void declareOutputFields(OutputFieldsDeclarer outputFieldsDeclarer) {
