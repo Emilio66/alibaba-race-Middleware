@@ -32,25 +32,36 @@ public class RaceTopology {
         Config conf = new Config();
         conf.put("TOPOLOGY_WORKERS",4);
         // conf.put("user.defined.logback.conf", "classpath:logback.xml");
-        int spout_Parallelism_hint = 1;
-        int dispatch_Parallelism_hint = 1;
-        int count_Parallelism_hint = 7;
-//        LocalCluster cluster = new LocalCluster();
-//建议加上这行，使得每个bolt/spout的并发度都为1
-        //conf.put(Config.TOPOLOGY_MAX_TASK_PARALLELISM, 1);
+        //int dispatch_Parallelism_hint = 1;
 
         int hash_spout_parallelism_hint = 4;
         int hash_bolt_parallelism_hint = 4;
-        int tm_dispatch_bolt_parallelism = 2;
-        int tb_dispatch_bolt_parallelism = 2;
-
+        int dispatch_bolt_parallelism = 2;
+        int count_Parallelism_hint = 3;
 
         TopologyBuilder builder = new TopologyBuilder();
 
-        builder.setSpout(RaceConfig.InputSpoutNsame, new HashSpout(), hash_spout_parallelism_hint);
+        builder.setSpout(RaceConfig.InputSpoutName, new HashSpout(), hash_spout_parallelism_hint);
 
         builder.setBolt(RaceConfig.HashBoltName, new HashBolt(), hash_bolt_parallelism_hint).setNumTasks(1)
-                .fieldsGrouping(RaceConfig.InputSpoutNsame, RaceConfig.HASH_STREAM, new Fields("orderId"));
+                .fieldsGrouping(RaceConfig.InputSpoutName, RaceConfig.HASH_STREAM, new Fields("orderId"));
+
+        //tmall data process
+        builder.setBolt(RaceConfig.TMDispatchBoltName, new TmallDispatchBolt(), dispatch_bolt_parallelism).
+              localOrShuffleGrouping(RaceConfig.HashBoltName, RaceConfig.TMALL_DISPATCH_STREAM);//hash bolt emits different streams
+        builder.setBolt(RaceConfig.TMCountBoltName, new TmallCountBolt(), count_Parallelism_hint).
+                fieldsGrouping(RaceConfig.TMDispatchBoltName, new Fields("minute"));
+
+        //taobao data process
+        builder.setBolt(RaceConfig.TBDispatchBoltName, new TaobaoDispatchBolt(), dispatch_bolt_parallelism).
+              localOrShuffleGrouping(RaceConfig.HashBoltName, RaceConfig.TAOBAO_DISPATCH_STREAM);
+        builder.setBolt(RaceConfig.TBCountBoltName, new TaobaoCountBolt(), count_Parallelism_hint).
+                fieldsGrouping(RaceConfig.TBDispatchBoltName, new Fields("minute"));
+
+        //pay ratio process (receive two streams: tmall stream, taobao stream, field grouping by minute)
+        builder.setBolt(RaceConfig.RatioCountBoltName, new PayRatioBolt(), count_Parallelism_hint).
+                fieldsGrouping(RaceConfig.TBCountBoltName, new Fields("minute")).
+                fieldsGrouping(RaceConfig.TMCountBoltName, new Fields("minute"));
 
         try {
             String topologyName = RaceConfig.JstormTopologyName;

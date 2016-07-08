@@ -39,8 +39,13 @@ public class RaceConfig implements Serializable {
     public static String taobaoStream = "taobao";
     public static String payStream = "pay";
 
-    public static String InputSpoutNsame = "SOURCE";
+    public static String InputSpoutName = "SOURCE";
     public static String HashBoltName = "hash_bolt";
+    public static String TBDispatchBoltName = "taobaoDispatch";
+    public static String TMDispatchBoltName = "tmallDispatch";
+    public static String TBCountBoltName = "taobaoCount";
+    public static String TMCountBoltName = "tmallCount";
+    public static String RatioCountBoltName = "ratioCount";
 
     public static final String HASH_STREAM = "hash_stream";
     public static final String TMALL_DISPATCH_STREAM = "tmall_dispatch_stream";
