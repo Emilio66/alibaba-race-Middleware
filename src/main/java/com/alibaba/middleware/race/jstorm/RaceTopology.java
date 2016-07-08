@@ -34,7 +34,7 @@ public class RaceTopology {
         // conf.put("user.defined.logback.conf", "classpath:logback.xml");
         //int dispatch_Parallelism_hint = 1;
 
-        int hash_spout_parallelism_hint = 4;
+        int hash_spout_parallelism_hint = 1;
         int hash_bolt_parallelism_hint = 4;
         int dispatch_bolt_parallelism = 2;
         int count_Parallelism_hint = 3;
