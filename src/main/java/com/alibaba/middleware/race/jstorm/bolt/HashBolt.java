@@ -36,6 +36,7 @@ public class HashBolt implements IRichBolt {
             while (true) {
                 try {
                     PaymentTuple payment = paymentBuffer.take();
+                    LOG.info("In buffer thread: " + payment.toString());
                     if (taobaoOrder.contains(payment.getOrderId())) {
                         collector.emit(RaceConfig.TAOBAO_DISPATCH_STREAM, new Values(payment));
                     } else if (tmallOrder.contains(payment.getOrderId())) {
