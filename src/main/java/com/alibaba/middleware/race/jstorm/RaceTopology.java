@@ -47,19 +47,19 @@ public class RaceTopology {
                 .fieldsGrouping(RaceConfig.InputSpoutName, RaceConfig.HASH_STREAM, new Fields("orderId"));
 
         //tmall data process
-        builder.setBolt(RaceConfig.TMDispatchBoltName, new TmallDispatchBolt(), dispatch_bolt_parallelism).
+        builder.setBolt(RaceConfig.TMDispatchBoltName, new TmallDispatchBolt(), dispatch_bolt_parallelism).setNumTasks(1).
               localOrShuffleGrouping(RaceConfig.HashBoltName, RaceConfig.TMALL_DISPATCH_STREAM);//hash bolt emits different streams
-        builder.setBolt(RaceConfig.TMCountBoltName, new TmallCountBolt(), count_Parallelism_hint).
+        builder.setBolt(RaceConfig.TMCountBoltName, new TmallCountBolt(), count_Parallelism_hint).setNumTasks(1).
                 fieldsGrouping(RaceConfig.TMDispatchBoltName, new Fields("minute"));
 
         //taobao data process
-        builder.setBolt(RaceConfig.TBDispatchBoltName, new TaobaoDispatchBolt(), dispatch_bolt_parallelism).
+        builder.setBolt(RaceConfig.TBDispatchBoltName, new TaobaoDispatchBolt(), dispatch_bolt_parallelism).setNumTasks(1).
               localOrShuffleGrouping(RaceConfig.HashBoltName, RaceConfig.TAOBAO_DISPATCH_STREAM);
-        builder.setBolt(RaceConfig.TBCountBoltName, new TaobaoCountBolt(), count_Parallelism_hint).
+        builder.setBolt(RaceConfig.TBCountBoltName, new TaobaoCountBolt(), count_Parallelism_hint).setNumTasks(1).
                 fieldsGrouping(RaceConfig.TBDispatchBoltName, new Fields("minute"));
 
         //pay ratio process (receive two streams: tmall stream, taobao stream, field grouping by minute)
-        builder.setBolt(RaceConfig.RatioCountBoltName, new PayRatioBolt(), count_Parallelism_hint).
+        builder.setBolt(RaceConfig.RatioCountBoltName, new PayRatioBolt(), count_Parallelism_hint).setNumTasks(1).
                 fieldsGrouping(RaceConfig.TBDispatchBoltName, new Fields("minute")).
                 fieldsGrouping(RaceConfig.TMDispatchBoltName, new Fields("minute"));
 
