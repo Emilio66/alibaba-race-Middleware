@@ -35,7 +35,7 @@ public class TaobaoDispatchBolt implements IRichBolt{
     @Override
     public void execute(Tuple tuple) {
         //cast to payment tuple
-        PaymentTuple payment = (PaymentTuple) tuple;
+        PaymentTuple payment = (PaymentTuple) tuple.getValue(0);
         LOG.info("TaobaoDispatchBolt get "+payment);
         //去重
         if(!distinctSet.contains(payment)){

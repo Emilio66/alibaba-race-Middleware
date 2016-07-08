@@ -34,7 +34,7 @@ public class TmallDispatchBolt implements IRichBolt {
     @Override
     public void execute(Tuple tuple) {
         //cast to payment tuple
-        PaymentTuple payment = (PaymentTuple) tuple;
+        PaymentTuple payment = (PaymentTuple) tuple.getValue(0);;
         LOG.info("TmallDispatchBolt get "+payment);
 
         if(!distinctSet.contains(payment)){
