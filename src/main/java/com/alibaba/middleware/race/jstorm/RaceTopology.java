@@ -49,7 +49,7 @@ public class RaceTopology {
 
         builder.setSpout(RaceConfig.InputSpoutNsame, new HashSpout(), hash_spout_parallelism_hint);
 
-        builder.setBolt(RaceConfig.HashBoltName, new HashBolt(), hash_bolt_parallelism_hint)
+        builder.setBolt(RaceConfig.HashBoltName, new HashBolt(), hash_bolt_parallelism_hint).setNumTasks(1)
                 .fieldsGrouping(RaceConfig.InputSpoutNsame, RaceConfig.HASH_STREAM, new Fields("orderId"));
 
         try {
