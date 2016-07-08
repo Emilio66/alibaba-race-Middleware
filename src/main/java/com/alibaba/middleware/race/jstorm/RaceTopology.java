@@ -6,6 +6,7 @@ import backtype.storm.topology.TopologyBuilder;
 import backtype.storm.tuple.Fields;
 import com.alibaba.middleware.race.RaceConfig;
 import com.alibaba.middleware.race.jstorm.bolt.*;
+import com.alibaba.middleware.race.jstorm.spout.HashSpout;
 import com.alibaba.middleware.race.jstorm.spout.InputSpout;
 import org.apache.log4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,32 +32,37 @@ public class RaceTopology {
         Config conf = new Config();
         conf.put("TOPOLOGY_WORKERS",4);
         // conf.put("user.defined.logback.conf", "classpath:logback.xml");
-        int spout_Parallelism_hint = 1;
-        int dispatch_Parallelism_hint = 1;
-        int count_Parallelism_hint = 7;
+        //int dispatch_Parallelism_hint = 1;
+
+        int hash_spout_parallelism_hint = 4;
+        int hash_bolt_parallelism_hint = 4;
+        int dispatch_bolt_parallelism = 2;
+        int count_Parallelism_hint = 3;
 
         TopologyBuilder builder = new TopologyBuilder();
 
-        builder.setSpout(RaceConfig.InputSpoutNsame, new InputSpout(), spout_Parallelism_hint);
+        builder.setSpout(RaceConfig.InputSpoutName, new HashSpout(), hash_spout_parallelism_hint);
+
+        builder.setBolt(RaceConfig.HashBoltName, new HashBolt(), hash_bolt_parallelism_hint)
+                .fieldsGrouping(RaceConfig.InputSpoutName, RaceConfig.HASH_STREAM, new Fields("orderId"));
 
         //tmall data process
-        builder.setBolt("tmallDispatch", new TmallDispatchBolt(), dispatch_Parallelism_hint).
-              localOrShuffleGrouping("hash", InputSpout.tmallStream);    //hash bolt emits different streams
-        builder.setBolt("tmallCount", new TmallCountBolt(), count_Parallelism_hint).
-                fieldsGrouping("tmallDispatch", new Fields("minute"));
+        builder.setBolt(RaceConfig.TMDispatchBoltName, new TmallDispatchBolt(), dispatch_bolt_parallelism).
+              localOrShuffleGrouping(RaceConfig.HashBoltName, RaceConfig.TMALL_DISPATCH_STREAM);//hash bolt emits different streams
+        builder.setBolt(RaceConfig.TMCountBoltName, new TmallCountBolt(), count_Parallelism_hint).
+                fieldsGrouping(RaceConfig.TMDispatchBoltName, new Fields("minute"));
 
         //taobao data process
-        builder.setBolt("taobaoDispatch", new TaobaoDispatchBolt(), dispatch_Parallelism_hint).
-              localOrShuffleGrouping("hash", InputSpout.taobaoStream);
-        builder.setBolt("taobaoCount", new TaobaoCountBolt(), count_Parallelism_hint).
-                fieldsGrouping("taobaoDispatch", InputSpout.taobaoStream, new Fields("minute"));
+        builder.setBolt(RaceConfig.TBDispatchBoltName, new TaobaoDispatchBolt(), dispatch_bolt_parallelism).
+              localOrShuffleGrouping(RaceConfig.HashBoltName, RaceConfig.TAOBAO_DISPATCH_STREAM);
+        builder.setBolt(RaceConfig.TBCountBoltName, new TaobaoCountBolt(), count_Parallelism_hint).
+                fieldsGrouping(RaceConfig.TBDispatchBoltName, new Fields("minute"));
 
         //pay ratio process (receive two streams: tmall stream, taobao stream, field grouping by minute)
-        //builder.setBolt("payDispatch", new PayDispatchBolt(), dispatch_Parallelism_hint).
-        //      localOrShuffleGrouping("source", InputSpout.payStream);
-        builder.setBolt("payRatioCount", new PayRatioBolt(), count_Parallelism_hint).
-                fieldsGrouping("taobaoDispatch", new Fields("minute")).
-                fieldsGrouping("tmallDispatch", new Fields("minute"));
+        builder.setBolt(RaceConfig.RatioCountBoltName, new PayRatioBolt(), count_Parallelism_hint).
+                fieldsGrouping(RaceConfig.TBCountBoltName, new Fields("minute")).
+                fieldsGrouping(RaceConfig.TMCountBoltName, new Fields("minute"));
+
         try {
             String topologyName = RaceConfig.JstormTopologyName;
                StormSubmitter.submitTopology(topologyName, conf, builder.createTopology());
