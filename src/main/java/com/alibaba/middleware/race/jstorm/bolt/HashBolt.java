@@ -83,6 +83,7 @@ public class HashBolt implements IRichBolt {
                 tmallOrder.add(orderId);
             }
         }
+        collector.ack(tuple);
     }
 
     @Override
