@@ -49,9 +49,9 @@ public class RaceTopology {
 
         SpoutDeclarer spout = builder.setSpout(RaceConfig.InputSpoutName, new HashSpout(), hash_spout_parallelism_hint);
         // force spout to run on different worker
-        Map spoutConfig = new HashMap();
-        ConfigExtension.setTaskOnDifferentNode(spoutConfig, true);
-        spout.addConfigurations(spoutConfig);
+//        Map spoutConfig = new HashMap();
+//        ConfigExtension.setTaskOnDifferentNode(spoutConfig, true);
+//        spout.addConfigurations(spoutConfig);
 
         builder.setBolt(RaceConfig.HashBoltName, new HashBolt(), hash_bolt_parallelism_hint).setNumTasks(1)
                 .fieldsGrouping(RaceConfig.InputSpoutName, RaceConfig.HASH_STREAM, new Fields("orderId"));
