@@ -54,12 +54,12 @@ public class RaceTopology {
         //ConfigExtension.setTaskOnDifferentNode(spoutConfig, true);
         //spout.addConfigurations(spoutConfig);
 
-        builder.setBolt("violentRatio", new ViolentRatioBolt(),1).shuffleGrouping(RaceConfig.InputSpoutName);
-        builder.setBolt("ratioSave", new RatioSaveBolt(),1).shuffleGrouping("violentRatio");
+        builder.setBolt("violentRatio", new ViolentRatioBolt(),1).globalGrouping(RaceConfig.InputSpoutName);
+        builder.setBolt("ratioSave", new RatioSaveBolt(),1).globalGrouping("violentRatio");
 
 
         builder.setBolt("middle", new MiddleBolt(), middle_bolt_parallelism).
-                shuffleGrouping(RaceConfig.InputSpoutName);
+                globalGrouping(RaceConfig.InputSpoutName);
         builder.setBolt(RaceConfig.HashBoltName, new HashBolt(), hash_bolt_parallelism_hint).setNumTasks(1)
                 .fieldsGrouping("middle", RaceConfig.HASH_STREAM, new Fields("orderId"));
 
