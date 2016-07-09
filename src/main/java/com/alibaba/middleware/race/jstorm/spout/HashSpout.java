@@ -40,21 +40,28 @@ public class HashSpout implements IRichSpout, MessageListenerConcurrently {
     public void open(Map map, TopologyContext topologyContext, SpoutOutputCollector spoutOutputCollector) {
         collector = spoutOutputCollector;
 
-        consumer = ConsumerFactory.getInstance(JStormUtils.process_pid());
-
         try {
-            consumer.subscribe(RaceConfig.MqPayTopic, "*"); //订阅支付消息的所有tag *
-            consumer.subscribe(RaceConfig.MqTaobaoTradeTopic, "*"); //订阅淘宝订单消息
-            consumer.subscribe(RaceConfig.MqTmallTradeTopic, "*"); //订阅天猫订单消息
-
-            consumer.registerMessageListener(this); //设置消息监听器, consumeMessage()实现消息处理逻辑
-            consumer.start();       //!!启动consumer, 一定不能缺少！
-
-            LOG.info("successfully create consumer " + consumer.getInstanceName());
-            LOG.info("consumer nameServerAddress: " + consumer.getNamesrvAddr());
-        } catch (MQClientException e) {
-            LOG.error("Failed to create Consumer subscription ", e);
+            consumer = ConsumerFactory.getInstance(JStormUtils.process_pid(), this);
+        } catch (Exception e) {
+            LOG.error("Failed to create consumer...");
             e.printStackTrace();
+        }
+
+        if (consumer == null) {
+            LOG.warn("Already exist consumer in current worker, don't need to fetch data");
+
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    while (true) {
+                        try {
+                            Thread.sleep(10000);
+                        } catch (InterruptedException e) {
+                            break;
+                        }
+                    }
+                }
+            }).start();
         }
     }
 
