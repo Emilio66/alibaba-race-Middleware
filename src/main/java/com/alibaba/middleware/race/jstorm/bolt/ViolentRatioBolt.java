@@ -38,10 +38,10 @@ public class ViolentRatioBolt implements IRichBolt {
             ArrayList<PaymentTuple> list = (ArrayList<PaymentTuple>) field1;
             for (PaymentTuple payment : list) {
                 Long time = payment.getCreateTime();
-                if (time != currentTime && time != 0) {
+                if (time > currentTime ) {
                     //emit last minute
                     if(currentPC != 0)
-                        collector.emit(new Values(currentTime, currentWL / currentPC * 1.0));
+                        collector.emit(new Values(currentTime, currentWL * 1.0 / currentPC));
                     currentTime = time;
                 }
 
