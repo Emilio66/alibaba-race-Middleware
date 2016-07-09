@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -25,7 +26,7 @@ public class TaobaoDispatchBolt implements IRichBolt{
     private OutputCollector collector;
     private static final Logger LOG = Logger.getLogger(TaobaoDispatchBolt.class);
     //unique payment set, same hashcode but not equal
-    private HashSet<PaymentTuple> distinctSet = new HashSet<PaymentTuple>(1024);
+    private Set<Integer> distinctSet = new HashSet<>();
 
     @Override
     public void prepare(Map map, TopologyContext topologyContext, OutputCollector outputCollector) {
@@ -38,11 +39,11 @@ public class TaobaoDispatchBolt implements IRichBolt{
         PaymentTuple payment = (PaymentTuple) tuple.getValue(0);
         LOG.info("TaobaoDispatchBolt get "+payment);
         //去重
-        if(!distinctSet.contains(payment)){
+        if(!distinctSet.contains(payment.hashCode())){
             //only emit useful fields [minute, payAmount, payPlatform] to count bolts
             collector.emit(new Values(payment.getCreateTime(),  payment.getPayAmount(), payment.getPayPlatform()));
 
-            distinctSet.add(payment);
+            distinctSet.add(payment.hashCode());
             LOG.info("TaobaoDispatchBolt emit "+payment);
         }
         collector.ack(tuple);
