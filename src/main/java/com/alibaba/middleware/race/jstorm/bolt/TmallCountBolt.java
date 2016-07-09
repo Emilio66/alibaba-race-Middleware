@@ -44,7 +44,7 @@ public class TmallCountBolt implements IRichBolt{
         long minute = tuple.getLong(0) * 60; //1st second stands for this minute
         long payAmount = tuple.getLong(1);
 
-        Log.info("TmallCountBolt get [minute " + minute + " ￥" + payAmount + " ]");
+       // Log.info("TmallCountBolt get [minute " + minute + " ￥" + payAmount + " ]");
 
         Long currentMoney = hashMap.get(minute);
         if (currentMoney == null)

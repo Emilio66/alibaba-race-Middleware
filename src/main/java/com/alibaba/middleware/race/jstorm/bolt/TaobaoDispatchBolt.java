@@ -37,14 +37,14 @@ public class TaobaoDispatchBolt implements IRichBolt{
     public void execute(Tuple tuple) {
         //cast to payment tuple
         PaymentTuple payment = (PaymentTuple) tuple.getValue(0);
-        LOG.info("TaobaoDispatchBolt get "+payment);
+      //  LOG.info("TaobaoDispatchBolt get "+payment);
         //去重
         if(!distinctSet.contains(payment)){
             //only emit useful fields [minute, payAmount, payPlatform] to count bolts
             collector.emit(new Values(payment.getCreateTime(),  payment.getPayAmount(), payment.getPayPlatform()));
 
             distinctSet.add(payment);
-            LOG.info("TaobaoDispatchBolt emit "+payment);
+          //  LOG.info("TaobaoDispatchBolt emit "+payment);
         }
         collector.ack(tuple);
     }

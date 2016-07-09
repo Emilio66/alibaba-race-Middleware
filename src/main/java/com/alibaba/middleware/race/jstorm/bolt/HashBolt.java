@@ -39,7 +39,7 @@ public class HashBolt implements IRichBolt {
             while (true) {
                 try {
                     PaymentTuple payment = paymentBuffer.take();
-                    LOG.info("In buffer thread: " + payment.toString());
+              //      LOG.info("In buffer thread: " + payment.toString());
                     if (taobaoOrder.contains(payment.getOrderId())) {
                         collector.emit(RaceConfig.TAOBAO_DISPATCH_STREAM, new Values(payment));
                     } else if (tmallOrder.contains(payment.getOrderId())) {
@@ -68,9 +68,9 @@ public class HashBolt implements IRichBolt {
         PaymentTuple payment = (PaymentTuple) tuple.getValue(1);
         OrderTuple order = (OrderTuple) tuple.getValue(2);
 
-        LOG.info("HashBolt get [ Order ID: " + orderId + " ] " + ++msgCount);
+        //LOG.info("HashBolt get [ Order ID: " + orderId + " ] " + ++msgCount);
         if (payment != null) {
-            LOG.info(payment.toString());
+          //  LOG.info(payment.toString());
             try {
                 paymentBuffer.put(payment);
             } catch (InterruptedException e) {
@@ -78,7 +78,7 @@ public class HashBolt implements IRichBolt {
             }
         }
         if (order != null) {
-            LOG.info(order.toString());
+          //  LOG.info(order.toString());
             if (order.getOrderType() == 0 && !taobaoOrder.contains(orderId)) {
                 taobaoOrder.add(orderId);
             }

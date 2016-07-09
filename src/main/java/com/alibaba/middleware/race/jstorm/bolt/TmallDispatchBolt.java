@@ -36,14 +36,14 @@ public class TmallDispatchBolt implements IRichBolt {
     public void execute(Tuple tuple) {
         //cast to payment tuple
         PaymentTuple payment = (PaymentTuple) tuple.getValue(0);;
-        LOG.info("TmallDispatchBolt get "+payment);
+      //  LOG.info("TmallDispatchBolt get "+payment);
 
         if(!distinctSet.contains(payment)){
             //only emit useful fields [minute, payAmount, payPlatform] to count bolts
             collector.emit(new Values(payment.getCreateTime(), payment.getPayAmount(), payment.getPayPlatform()));
             //add to unique set
             distinctSet.add(payment);
-            LOG.info("TmallDispatchBolt emit "+payment);
+         //   LOG.info("TmallDispatchBolt emit "+payment);
         }
 
         collector.ack(tuple);

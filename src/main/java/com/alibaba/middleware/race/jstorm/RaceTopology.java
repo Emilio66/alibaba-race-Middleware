@@ -32,29 +32,32 @@ public class RaceTopology {
 
     private static Logger LOG = Logger.getLogger(RaceTopology.class);
 
-
     public static void main(String[] args) throws Exception {
         Config conf = new Config();
         conf.put("TOPOLOGY_WORKERS",4);
+        conf.setNumAckers(0);   //no ack
         // conf.put("user.defined.logback.conf", "classpath:logback.xml");
         //int dispatch_Parallelism_hint = 1;
 
         int hash_spout_parallelism_hint = 4;
-        int hash_bolt_parallelism_hint = 4;
+        int hash_bolt_parallelism_hint = 6;
         int dispatch_bolt_parallelism = 2;
-        int count_Parallelism_hint = 3;
+        int count_Parallelism_hint = 4;
+        int middle_bolt_parallelism =2;
 
         TopologyBuilder builder = new TopologyBuilder();
 
 
         SpoutDeclarer spout = builder.setSpout(RaceConfig.InputSpoutName, new HashSpout(), hash_spout_parallelism_hint);
         // force spout to run on different worker
-//        Map spoutConfig = new HashMap();
-//        ConfigExtension.setTaskOnDifferentNode(spoutConfig, true);
-//        spout.addConfigurations(spoutConfig);
+        //Map spoutConfig = new HashMap();
+        //ConfigExtension.setTaskOnDifferentNode(spoutConfig, true);
+        //spout.addConfigurations(spoutConfig);
 
+        builder.setBolt("middle", new MiddleBolt(), middle_bolt_parallelism).
+                shuffleGrouping(RaceConfig.InputSpoutName);
         builder.setBolt(RaceConfig.HashBoltName, new HashBolt(), hash_bolt_parallelism_hint).setNumTasks(1)
-                .fieldsGrouping(RaceConfig.InputSpoutName, RaceConfig.HASH_STREAM, new Fields("orderId"));
+                .fieldsGrouping("middle", RaceConfig.HASH_STREAM, new Fields("orderId"));
 
         //tmall data process
         builder.setBolt(RaceConfig.TMDispatchBoltName, new TmallDispatchBolt(), dispatch_bolt_parallelism).setNumTasks(1).
@@ -68,10 +71,11 @@ public class RaceTopology {
         builder.setBolt(RaceConfig.TBCountBoltName, new TaobaoCountBolt(), count_Parallelism_hint).setNumTasks(1).
                 fieldsGrouping(RaceConfig.TBDispatchBoltName, new Fields("minute"));
 
+        //give up ratio
         //pay ratio process (receive two streams: tmall stream, taobao stream, field grouping by minute)
-        builder.setBolt(RaceConfig.RatioCountBoltName, new PayRatioBolt(), 1).setNumTasks(1).
-                fieldsGrouping(RaceConfig.TBDispatchBoltName, new Fields("minute")).
-                fieldsGrouping(RaceConfig.TMDispatchBoltName, new Fields("minute"));
+        //builder.setBolt(RaceConfig.RatioCountBoltName, new PayRatioBolt(), 1).setNumTasks(1).
+           //     fieldsGrouping(RaceConfig.TBDispatchBoltName, new Fields("minute")).
+            //    fieldsGrouping(RaceConfig.TMDispatchBoltName, new Fields("minute"));
 
         try {
             String topologyName = RaceConfig.JstormTopologyName;
