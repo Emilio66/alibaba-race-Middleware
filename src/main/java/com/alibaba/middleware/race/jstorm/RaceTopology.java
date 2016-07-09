@@ -59,7 +59,7 @@ public class RaceTopology {
                 fieldsGrouping(RaceConfig.TBDispatchBoltName, new Fields("minute"));
 
         //pay ratio process (receive two streams: tmall stream, taobao stream, field grouping by minute)
-        builder.setBolt(RaceConfig.RatioCountBoltName, new PayRatioBolt(), count_Parallelism_hint).setNumTasks(1).
+        builder.setBolt(RaceConfig.RatioCountBoltName, new PayRatioBolt(), 1).setNumTasks(1).
                 fieldsGrouping(RaceConfig.TBDispatchBoltName, new Fields("minute")).
                 fieldsGrouping(RaceConfig.TMDispatchBoltName, new Fields("minute"));
 

@@ -35,7 +35,7 @@ public class TmallCountBolt implements IRichBolt{
     @Override
     public void prepare(Map map, TopologyContext topologyContext, OutputCollector outputCollector) {
         this.collector = outputCollector;
-        tairOperator = TairOperatorImpl.newInstance();
+        //tairOperator = TairOperatorImpl.newInstance();
         prefix = RaceConfig.prex_tmall;
     }
 
@@ -56,7 +56,7 @@ public class TmallCountBolt implements IRichBolt{
         hashMap.put(minute, currentMoney);
 
         //save to tair directly
-        tairOperator.write(prefix+"_"+minute, currentMoney / 100.0); //存入时，保留两位小数
+        //tairOperator.write(prefix+"_"+minute, currentMoney / 100.0); //存入时，保留两位小数
         collector.ack(tuple);
     }
 
