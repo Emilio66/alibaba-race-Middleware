@@ -23,6 +23,7 @@ import com.alibaba.rocketmq.common.message.MessageExt;
 import com.alibaba.rocketmq.common.message.MessageQueue;
 import org.apache.log4j.Logger;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -81,22 +82,38 @@ public class HashSpout implements IRichSpout, MessageListenerConcurrently {
     public ConsumeConcurrentlyStatus consumeMessage(List<MessageExt> msgList, ConsumeConcurrentlyContext context) {
         MessageQueue queue = context.getMessageQueue();
         String topic = queue.getTopic();
+        // 暴力地扔出整個list，不讓消息阻塞
+        List violentList;
+        if (topic.equals(RaceConfig.MqPayTopic)) {
+            violentList = new ArrayList<PaymentTuple>();
+            for (MessageExt msg : msgList) {
+                byte[] body = msg.getBody();
+                if (body.length == 2 && body[0] == 0 && body[1] == 0) {
+                    LOG.info("Got the end signal for " + topic + " message queue.");
+                    continue;
+                }
 
-        for (MessageExt msg : msgList) {
-            byte[] body = msg.getBody();
-            if (body.length == 2 && body[0] == 0 && body[1] == 0) {
-                LOG.info("Got the end signal for " + topic + " message queue.");
-                continue;
-            }
-
-            if (topic.equals(RaceConfig.MqPayTopic)) {
                 PaymentTuple payment = new PaymentTuple(RaceUtils.readKryoObject(PaymentMessage.class, body));
-                collector.emit(RaceConfig.HASH_STREAM, new Values(payment.getOrderId(), payment, null));
-            } else {
-                OrderTuple order = new OrderTuple(RaceUtils.readKryoObject(OrderMessage.class, body).getOrderId(),
-                        (short)(topic.equals(RaceConfig.MqTaobaoTradeTopic) ? 0 : 1));
-                collector.emit(RaceConfig.HASH_STREAM, new Values(order.getOrderId(), null, order));
+                violentList.add(payment);
             }
+            collector.emit(new Values(violentList,null));   //payment
+           // collector.emit(RaceConfig.HASH_STREAM, new Values(payment.getOrderId(), payment, null));
+
+        } else {
+            violentList = new ArrayList<OrderTuple>();
+            for (MessageExt msg : msgList) {
+                byte[] body = msg.getBody();
+                if (body.length == 2 && body[0] == 0 && body[1] == 0) {
+                    LOG.info("Got the end signal for " + topic + " message queue.");
+                    continue;
+                }
+
+                OrderTuple order = new OrderTuple(RaceUtils.readKryoObject(OrderMessage.class, body).getOrderId(),
+                        (short) (topic.equals(RaceConfig.MqTaobaoTradeTopic) ? 0 : 1));
+                violentList.add(order);
+            }
+            collector.emit(new Values(null, violentList));  //order message
+           // collector.emit(RaceConfig.HASH_STREAM, new Values(order.getOrderId(), null, order));
         }
 
         return ConsumeConcurrentlyStatus.CONSUME_SUCCESS;
@@ -104,7 +121,8 @@ public class HashSpout implements IRichSpout, MessageListenerConcurrently {
 
     @Override
     public void declareOutputFields(OutputFieldsDeclarer declarer) {
-        declarer.declareStream(RaceConfig.HASH_STREAM, new Fields("orderId", "payment", "order"));
+        declarer.declare(new Fields("list"));
+        //declarer.declareStream(RaceConfig.HASH_STREAM, new Fields("orderId", "payment", "order"));
     }
 
     @Override

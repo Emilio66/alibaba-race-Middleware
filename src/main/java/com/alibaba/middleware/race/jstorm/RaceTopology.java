@@ -32,7 +32,6 @@ public class RaceTopology {
 
     private static Logger LOG = Logger.getLogger(RaceTopology.class);
 
-
     public static void main(String[] args) throws Exception {
         Config conf = new Config();
         conf.put("TOPOLOGY_WORKERS",4);
@@ -53,8 +52,10 @@ public class RaceTopology {
 //        ConfigExtension.setTaskOnDifferentNode(spoutConfig, true);
 //        spout.addConfigurations(spoutConfig);
 
+        builder.setBolt("middle", new MiddleBolt(), hash_bolt_parallelism_hint).
+                shuffleGrouping(RaceConfig.InputSpoutName);
         builder.setBolt(RaceConfig.HashBoltName, new HashBolt(), hash_bolt_parallelism_hint).setNumTasks(1)
-                .fieldsGrouping(RaceConfig.InputSpoutName, RaceConfig.HASH_STREAM, new Fields("orderId"));
+                .fieldsGrouping("middle", RaceConfig.HASH_STREAM, new Fields("orderId"));
 
         //tmall data process
         builder.setBolt(RaceConfig.TMDispatchBoltName, new TmallDispatchBolt(), dispatch_bolt_parallelism).setNumTasks(1).
