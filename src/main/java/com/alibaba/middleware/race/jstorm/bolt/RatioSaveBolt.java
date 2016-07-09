@@ -32,7 +32,7 @@ public class RatioSaveBolt implements IRichBolt{
     @Override
     public void execute(Tuple tuple) {
         long createTime = tuple.getLong(0) * 60; //1st second stands for this minute
-        double ratio = tuple.getDouble(1) / 100;
+        double ratio = tuple.getDouble(1);
 
         //persist
         tairOperator.write(prefix + "_" + createTime, ratio);
