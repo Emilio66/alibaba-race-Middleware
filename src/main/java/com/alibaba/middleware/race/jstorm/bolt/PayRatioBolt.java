@@ -45,7 +45,7 @@ public class PayRatioBolt implements IRichBolt {
         /*scheduledPersist.scheduleAtFixedRate(new PersistThread(RaceConfig.prex_ratio, ratioMap),
                 RaceConfig.persistInitialDelay, RaceConfig.persitInterval, TimeUnit.SECONDS);*/
         LOG.info("create ratio bolt: " + this.toString());
-        //tairOperator = TairOperatorImpl.newInstance();
+        tairOperator = TairOperatorImpl.newInstance();
         prefix = RaceConfig.prex_ratio;
     }
 
@@ -111,7 +111,7 @@ public class PayRatioBolt implements IRichBolt {
             ratioMap.put(createTime, ratio);
         }
         //persist
-        //tairOperator.write(prefix + "_" + createTime, ratio);
+        tairOperator.write(prefix + "_" + createTime, ratio);
         collector.ack(tuple);
     }
 
