@@ -2,8 +2,10 @@ package com.alibaba.middleware.race.jstorm;
 
 import backtype.storm.Config;
 import backtype.storm.StormSubmitter;
+import backtype.storm.topology.SpoutDeclarer;
 import backtype.storm.topology.TopologyBuilder;
 import backtype.storm.tuple.Fields;
+import com.alibaba.jstorm.client.ConfigExtension;
 import com.alibaba.middleware.race.RaceConfig;
 import com.alibaba.middleware.race.jstorm.bolt.*;
 import com.alibaba.middleware.race.jstorm.spout.HashSpout;
@@ -11,6 +13,9 @@ import com.alibaba.middleware.race.jstorm.spout.InputSpout;
 import org.apache.log4j.Logger;
 import org.slf4j.LoggerFactory;
 import backtype.storm.LocalCluster;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * 这是一个很简单的例子
@@ -41,7 +46,12 @@ public class RaceTopology {
 
         TopologyBuilder builder = new TopologyBuilder();
 
-        builder.setSpout(RaceConfig.InputSpoutName, new HashSpout(), hash_spout_parallelism_hint);
+
+        SpoutDeclarer spout = builder.setSpout(RaceConfig.InputSpoutName, new HashSpout(), hash_spout_parallelism_hint);
+        // force spout to run on different worker
+        Map spoutConfig = new HashMap();
+        ConfigExtension.setTaskOnDifferentNode(spoutConfig, true);
+        spout.addConfigurations(spoutConfig);
 
         builder.setBolt(RaceConfig.HashBoltName, new HashBolt(), hash_bolt_parallelism_hint).setNumTasks(1)
                 .fieldsGrouping(RaceConfig.InputSpoutName, RaceConfig.HASH_STREAM, new Fields("orderId"));
