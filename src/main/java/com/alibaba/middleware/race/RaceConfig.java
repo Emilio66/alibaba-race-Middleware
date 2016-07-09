@@ -50,4 +50,6 @@ public class RaceConfig implements Serializable {
     public static final String HASH_STREAM = "hash_stream";
     public static final String TMALL_DISPATCH_STREAM = "tmall_dispatch_stream";
     public static final String TAOBAO_DISPATCH_STREAM = "taobao_dispatch_stream";
+    public static final String Violent_Pay_Stream = "violent_pay";
+
 }
