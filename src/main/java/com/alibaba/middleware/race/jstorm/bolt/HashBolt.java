@@ -7,6 +7,7 @@ import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
+import com.alibaba.jstorm.utils.JStormUtils;
 import com.alibaba.middleware.race.RaceConfig;
 import com.alibaba.middleware.race.jstorm.tuple.OrderTuple;
 import com.alibaba.middleware.race.jstorm.tuple.PaymentTuple;
@@ -29,6 +30,8 @@ public class HashBolt implements IRichBolt {
     protected Set<Long> taobaoOrder = new HashSet<>();
     protected Set<Long> tmallOrder = new HashSet<>();
     protected LinkedBlockingDeque<PaymentTuple> paymentBuffer = new LinkedBlockingDeque<>();
+
+    private int msgCount = 0;
 
     class BufferThread extends Thread {
         @Override
@@ -65,7 +68,7 @@ public class HashBolt implements IRichBolt {
         PaymentTuple payment = (PaymentTuple) tuple.getValue(1);
         OrderTuple order = (OrderTuple) tuple.getValue(2);
 
-        LOG.info("HashBolt get [ Order ID: " + orderId + " ]");
+        LOG.info("HashBolt get [ Order ID: " + orderId + " ] " + ++msgCount);
         if (payment != null) {
             LOG.info(payment.toString());
             try {
