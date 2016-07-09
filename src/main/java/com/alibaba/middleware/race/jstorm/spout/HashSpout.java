@@ -121,7 +121,7 @@ public class HashSpout implements IRichSpout, MessageListenerConcurrently {
 
     @Override
     public void declareOutputFields(OutputFieldsDeclarer declarer) {
-        declarer.declare(new Fields("list"));
+        declarer.declare(new Fields("payment", "order"));
         //declarer.declareStream(RaceConfig.HASH_STREAM, new Fields("orderId", "payment", "order"));
     }
 

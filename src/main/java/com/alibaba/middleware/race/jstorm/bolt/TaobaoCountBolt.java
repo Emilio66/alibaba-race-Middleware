@@ -37,7 +37,7 @@ public class TaobaoCountBolt implements IRichBolt {
         long minute = tuple.getLong(0) * 60; //1st second stands for this minute
         long payAmount = tuple.getLong(1);
 
-        Log.info("TaobaoCountBolt get [minute " + minute + " ￥" + payAmount + " ]");
+        //Log.info("TaobaoCountBolt get [minute " + minute + " ￥" + payAmount + " ]");
 
         Long currentMoney = hashMap.get(minute);
         if (currentMoney == null)
