@@ -54,8 +54,8 @@ public class RaceTopology {
         //ConfigExtension.setTaskOnDifferentNode(spoutConfig, true);
         //spout.addConfigurations(spoutConfig);
 
-        builder.setBolt("violentRatio", new ViolentRatioBolt(),1).globalGrouping(RaceConfig.InputSpoutName);
-        builder.setBolt("ratioSave", new RatioSaveBolt(),1).globalGrouping("violentRatio");
+        builder.setBolt("violentRatio", new ViolentRatioBolt(),1).shuffleGrouping(RaceConfig.InputSpoutName);
+        builder.setBolt("ratioSave", new RatioSaveBolt(),1).shuffleGrouping("violentRatio");
 
 
         builder.setBolt("middle", new MiddleBolt(), middle_bolt_parallelism).

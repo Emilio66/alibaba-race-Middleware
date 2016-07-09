@@ -34,15 +34,15 @@ public class MiddleBolt  implements IRichBolt {
 
         //payment list tuple
         if(field1 != null){
-            ArrayList<PaymentTuple>list = (ArrayList<PaymentTuple>)field1;
-            for(PaymentTuple payment : list){
+            ArrayList<PaymentTuple> list = (ArrayList<PaymentTuple>)field1;
+            for(PaymentTuple payment : list) {
                 collector.emit(RaceConfig.HASH_STREAM, new Values(payment.getOrderId(), payment, null));
             }
 
         }else{
             //order list tuple
-            ArrayList<OrderTuple>list = (ArrayList<OrderTuple>)field2;
-            for(OrderTuple order : list){
+            ArrayList<OrderTuple> list = (ArrayList<OrderTuple>)field2;
+            for(OrderTuple order : list) {
                 collector.emit(RaceConfig.HASH_STREAM, new Values(order.getOrderId(), null, order));
             }
         }
