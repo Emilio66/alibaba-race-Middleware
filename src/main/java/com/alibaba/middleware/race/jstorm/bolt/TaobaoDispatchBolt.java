@@ -26,7 +26,7 @@ public class TaobaoDispatchBolt implements IRichBolt{
     private OutputCollector collector;
     private static final Logger LOG = Logger.getLogger(TaobaoDispatchBolt.class);
     //unique payment set, same hashcode but not equal
-    private Set<Integer> distinctSet = new HashSet<>();
+    private Set<PaymentTuple> distinctSet = new HashSet<PaymentTuple>();
 
     @Override
     public void prepare(Map map, TopologyContext topologyContext, OutputCollector outputCollector) {
@@ -39,11 +39,11 @@ public class TaobaoDispatchBolt implements IRichBolt{
         PaymentTuple payment = (PaymentTuple) tuple.getValue(0);
         LOG.info("TaobaoDispatchBolt get "+payment);
         //去重
-        if(!distinctSet.contains(payment.hashCode())){
+        if(!distinctSet.contains(payment)){
             //only emit useful fields [minute, payAmount, payPlatform] to count bolts
             collector.emit(new Values(payment.getCreateTime(),  payment.getPayAmount(), payment.getPayPlatform()));
 
-            distinctSet.add(payment.hashCode());
+            distinctSet.add(payment);
             LOG.info("TaobaoDispatchBolt emit "+payment);
         }
         collector.ack(tuple);
