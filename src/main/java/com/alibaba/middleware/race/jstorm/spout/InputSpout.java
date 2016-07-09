@@ -57,7 +57,7 @@ public class InputSpout implements IRichSpout, MessageListenerConcurrently {
         tmallOrder = new HashSet<Long>();
         taobaoOrder = new HashSet<Long>();
 
-        consumer = ConsumerFactory.getInstance(JStormUtils.process_pid());
+        //consumer = ConsumerFactory.getInstance(JStormUtils.process_pid());
 
         try {
             consumer.subscribe(RaceConfig.MqPayTopic, "*"); //订阅支付消息的所有tag *
