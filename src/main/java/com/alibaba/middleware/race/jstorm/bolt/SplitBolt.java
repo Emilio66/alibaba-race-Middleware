@@ -71,11 +71,13 @@ public class SplitBolt implements IRichBolt{
         if (field1 != null) {
             List<PaymentTuple> paymentTuples = (List<PaymentTuple>) field1;
             for (PaymentTuple payment : paymentTuples) {
+                //LOG.info("Get payment: " + payment);
                 paymentBuffer.addLast(payment);
             }
         } else {
             List<OrderTuple> orderTuples = (List<OrderTuple>) field2;
             for (OrderTuple order : orderTuples) {
+                //LOG.info("Get order: " + order.toString());
                 if (order.getOrderType() == 0) { // taobao order
                     taobaoOrder.add(order.getOrderId());
                 } else {
