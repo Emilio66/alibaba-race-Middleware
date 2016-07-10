@@ -46,7 +46,7 @@ public class SplitBolt implements IRichBolt{
                         collector.emit(RaceConfig.tmallStream, new Values(payment));
                     } else {
                         paymentBuffer.addFirst(payment);
-                        Thread.sleep(10);
+                        Thread.sleep(100);
                     }
                 } catch (InterruptedException e) {
                     e.printStackTrace();
