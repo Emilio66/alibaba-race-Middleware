@@ -99,10 +99,10 @@ public class TmallDispatchBolt implements IRichBolt {
         long amount = payment.getPayAmount();
 
         // 首先更新Map中的统计值
-        if (amountMap.containsKey(minute)) {
-            amountMap.put(minute, amountMap.get(minute) + amount);
-        } else {
+        if (amountMap.get(minute) == null) {
             amountMap.put(minute, amount);
+        } else {
+            amountMap.put(minute, amountMap.get(minute) + amount);
         }
 
         // ---- 下面开始写入Tair的逻辑 -----
