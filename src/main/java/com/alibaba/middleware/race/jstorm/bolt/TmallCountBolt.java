@@ -51,7 +51,7 @@ public class TmallCountBolt implements IRichBolt{
             }
         }
 
-        collector.ack(tuple);
+        //collector.ack(tuple);
     }
 
     @Override

@@ -49,7 +49,7 @@ public class TaobaoCountBolt implements IRichBolt {
             }
         }
 
-        collector.ack(tuple);
+        //collector.ack(tuple);
     }
 
     @Override
