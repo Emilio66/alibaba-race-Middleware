@@ -45,3 +45,10 @@
  * [日志下载](http://ali-middleware-race.oss-cn-shanghai.aliyuncs.com/424452my9i.tar.xz)
 
  * [日志说明：](https://bbs.aliyun.com/read/287102.html?spm=5176.bbsl254.0.0.FC5JU3)
+
+反注释这三行, in RaceTopology line 52 - 54
+//        Map spoutConfig = new HashMap();
+//        ConfigExtension.setTaskOnDifferentNode(spoutConfig, true);
+//        spout.addConfigurations(spoutConfig);
+
+记得把tair注释去掉

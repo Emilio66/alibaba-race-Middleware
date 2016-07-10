@@ -4,22 +4,17 @@ import backtype.storm.task.OutputCollector;
 import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.IRichBolt;
 import backtype.storm.topology.OutputFieldsDeclarer;
+import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
+import backtype.storm.tuple.Values;
 import com.alibaba.middleware.race.RaceConfig;
-import com.alibaba.middleware.race.Tair.PersistThread;
 import com.alibaba.middleware.race.Tair.TairOperatorImpl;
-import com.alibaba.middleware.race.Utils.Arith;
 import com.alibaba.middleware.race.jstorm.tuple.PaymentTuple;
 import org.apache.log4j.Logger;
-import org.slf4j.LoggerFactory;
-import sun.rmi.runtime.Log;
 
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.Collection;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.Set;
 
 /**
  * Created by zhaoz on 2016/7/2.
@@ -29,7 +24,7 @@ public class TmallCountBolt implements IRichBolt{
 
     private static final Logger Log = Logger.getLogger(TmallCountBolt.class);
     private OutputCollector collector;
-    private HashMap<Long, Long> hashMap = new HashMap<Long, Long>(1024); //计数表
+    private Set<Long> orderSet;
     private TairOperatorImpl tairOperator;
     private String prefix;
     @Override
@@ -41,22 +36,21 @@ public class TmallCountBolt implements IRichBolt{
 
     @Override
     public void execute(Tuple tuple) {
-        long minute = tuple.getLong(0) * 60; //1st second stands for this minute
-        long payAmount = tuple.getLong(1);
+        String topic = tuple.getSourceStreamId();
 
-       // Log.info("TmallCountBolt get [minute " + minute + " ￥" + payAmount + " ]");
+        if (topic.equals(RaceConfig.tmallStream)) {
+            Collection<Long> taobaoOrder = (Collection<Long>) tuple.getValue(0);
+            orderSet.addAll(taobaoOrder);
+        } else { // topic == RaceConfig.payStream
+            Collection<PaymentTuple> payments = (Collection<PaymentTuple>) tuple.getValue(0);
 
-        Long currentMoney = hashMap.get(minute);
-        if (currentMoney == null)
-            currentMoney = 0L;
-        currentMoney += payAmount;  //累加金额
-        //保留两位小数 （暂时去掉
-        // currentMoney = Arith.round(currentMoney, 2);
+            for (PaymentTuple payment : payments) {
+                if (orderSet.contains(payment.getOrderId())) {
+                    collector.emit(RaceConfig.TMALL_DISPATCH_STREAM, new Values(payment.getCreateTime(), payment.getPayAmount()));
+                }
+            }
+        }
 
-        hashMap.put(minute, currentMoney);
-
-        //save to tair directly
-        tairOperator.write(prefix+"_"+minute, currentMoney / 100.0); //存入时，保留两位小数
         collector.ack(tuple);
     }
 
@@ -66,8 +60,8 @@ public class TmallCountBolt implements IRichBolt{
     }
 
     @Override
-    public void declareOutputFields(OutputFieldsDeclarer outputFieldsDeclarer) {
-
+    public void declareOutputFields(OutputFieldsDeclarer declarer) {
+        declarer.declare(new Fields("minute", "payment"));
     }
 
     @Override

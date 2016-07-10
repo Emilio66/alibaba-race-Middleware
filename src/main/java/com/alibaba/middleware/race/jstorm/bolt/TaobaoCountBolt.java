@@ -4,15 +4,15 @@ import backtype.storm.task.OutputCollector;
 import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.IRichBolt;
 import backtype.storm.topology.OutputFieldsDeclarer;
+import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
+import backtype.storm.tuple.Values;
 import com.alibaba.middleware.race.RaceConfig;
 import com.alibaba.middleware.race.Tair.TairOperatorImpl;
 import com.alibaba.middleware.race.jstorm.tuple.PaymentTuple;
 import org.apache.log4j.Logger;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by zhaoz on 2016/7/3.
@@ -21,7 +21,7 @@ public class TaobaoCountBolt implements IRichBolt {
     private OutputCollector collector;
     private static final Logger Log = Logger.getLogger(TaobaoCountBolt.class);
     //计数表,Long计算，存时除100.0;
-    private HashMap<Long, Long> hashMap = new HashMap<Long, Long>(1024);
+    private Set<Long> orderSet = new HashSet<>();
     private TairOperatorImpl tairOperator;
     private String prefix;
 
@@ -34,22 +34,21 @@ public class TaobaoCountBolt implements IRichBolt {
 
     @Override
     public void execute(Tuple tuple) {
-        long minute = tuple.getLong(0) * 60; //1st second stands for this minute
-        long payAmount = tuple.getLong(1);
+        String topic = tuple.getSourceStreamId();
 
-        //Log.info("TaobaoCountBolt get [minute " + minute + " ￥" + payAmount + " ]");
+        if (topic.equals(RaceConfig.taobaoStream)) {
+            Collection<Long> taobaoOrder = (Collection<Long>) tuple.getValue(0);
+            orderSet.addAll(taobaoOrder);
+        } else { // topic == RaceConfig.payStream
+            Collection<PaymentTuple> payments = (Collection<PaymentTuple>) tuple.getValue(0);
 
-        Long currentMoney = hashMap.get(minute);
-        if (currentMoney == null)
-            currentMoney = 0L;
-        currentMoney += payAmount;  //累加金额
-        //保留两位小数 （暂时去掉
-        // currentMoney = Arith.round(currentMoney, 2);
+            for (PaymentTuple payment : payments) {
+                if (orderSet.contains(payment.getOrderId())) {
+                    collector.emit(RaceConfig.TAOBAO_DISPATCH_STREAM, new Values(payment.getCreateTime(), payment.getPayAmount()));
+                }
+            }
+        }
 
-        hashMap.put(minute, currentMoney);
-
-        //save to tair directly
-        tairOperator.write(prefix+"_"+minute,currentMoney/100.0); //存入时，保留两位小数
         collector.ack(tuple);
     }
 
@@ -59,8 +58,8 @@ public class TaobaoCountBolt implements IRichBolt {
     }
 
     @Override
-    public void declareOutputFields(OutputFieldsDeclarer outputFieldsDeclarer) {
-
+    public void declareOutputFields(OutputFieldsDeclarer declarer) {
+        declarer.declare(new Fields("minute", "payment"));
     }
 
     @Override
