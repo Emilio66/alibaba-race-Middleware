@@ -39,12 +39,11 @@ public class SplitBolt implements IRichBolt{
             while (true) {
                 try {
                     PaymentTuple payment = paymentBuffer.take();
+                    LOG.info("Get payment: " + payment.toString());
 
                     if (taobaoOrder.contains(payment.getOrderId())) {
-                        LOG.info("Emit payment to taobaoStream: " + payment.toString());
                         collector.emit(RaceConfig.taobaoStream, new Values(payment));
                     } else if (tmallOrder.contains(payment.getOrderId())) {
-                        LOG.info("Emit payment to tmallStream: " + payment.toString());
                         collector.emit(RaceConfig.tmallStream, new Values(payment));
                     } else {
                         paymentBuffer.addFirst(payment);

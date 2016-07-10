@@ -94,7 +94,6 @@ public class HashSpout implements IRichSpout, MessageListenerConcurrently {
                 }
 
                 PaymentTuple payment = new PaymentTuple(RaceUtils.readKryoObject(PaymentMessage.class, body));
-                LOG.info("Get payment: " + payment.toString());
                 violentList.add(payment);
             }
             collector.emit(new Values(violentList,null));   //payment
@@ -111,7 +110,6 @@ public class HashSpout implements IRichSpout, MessageListenerConcurrently {
 
                 OrderTuple order = new OrderTuple(RaceUtils.readKryoObject(OrderMessage.class, body).getOrderId(),
                         (short) (topic.equals(RaceConfig.MqTaobaoTradeTopic) ? 0 : 1));
-                LOG.info("Get order: " + order.toString());
                 violentList.add(order);
             }
             collector.emit(new Values(null, violentList));  //order message

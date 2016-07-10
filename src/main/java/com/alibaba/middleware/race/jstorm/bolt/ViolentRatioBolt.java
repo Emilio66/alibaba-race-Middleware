@@ -47,7 +47,6 @@ public class ViolentRatioBolt implements IRichBolt {
                 if (time > currentTime) {
                     //emit last minute
                     if(currentPC != 0) {
-                        LOG.info("Emit ratio at count: " + count);
                         collector.emit(new Values(currentTime, currentWL * 1.0 / currentPC));
                     }
                     currentTime = time;
@@ -57,13 +56,11 @@ public class ViolentRatioBolt implements IRichBolt {
                 if (payment.getPayPlatform() == 0) {
                     currentPC += payment.getPayAmount();
                     if (count == 181) { // tricky code, need to be fixed in the future
-                        LOG.info("Emit ratio at count: " + count);
                         collector.emit(new Values(currentTime, currentWL * 1.0 / currentPC));
                     }
                 } else {
                     currentWL += payment.getPayAmount();
                     if (count == 181) {
-                        LOG.info("Emit ratio at count: " + count);
                         collector.emit(new Values(currentTime, currentWL * 1.0 / currentPC));
                     }
                 }
