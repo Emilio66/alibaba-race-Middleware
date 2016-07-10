@@ -42,11 +42,16 @@ public class TmallDispatchBolt implements IRichBolt {
     public void execute(Tuple tuple) {
         //cast to payment tuple
         PaymentTuple payment = (PaymentTuple) tuple.getValue(0);
+        LOG.info("Get payment: " + payment.toString());
 
         long minute= payment.getCreateTime();
         long money = payment.getPayAmount();
 
-        if(minute > currentTime && currentTime != 0){
+        if (currentTime == 0) {
+            currentTime = minute;
+        }
+
+        if(minute > currentTime){
             long savedTime = minute * 60;
             double savedMoney = currentMoney / 100.0;
             //write last minute
