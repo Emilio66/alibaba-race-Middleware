@@ -44,7 +44,7 @@ public class TaobaoCountBolt implements IRichBolt {
 
             for (PaymentTuple payment : payments) {
                 if (orderSet.contains(payment.getOrderId())) {
-                    collector.emit(RaceConfig.TAOBAO_DISPATCH_STREAM, new Values(payment.getCreateTime(), payment));
+                    collector.emit(RaceConfig.TAOBAO_DISPATCH_STREAM, new Values(payment.getCreateTime(), payment.getPayAmount()));
                 }
             }
         }

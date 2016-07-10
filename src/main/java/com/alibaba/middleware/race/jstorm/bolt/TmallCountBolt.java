@@ -46,7 +46,7 @@ public class TmallCountBolt implements IRichBolt{
 
             for (PaymentTuple payment : payments) {
                 if (orderSet.contains(payment.getOrderId())) {
-                    collector.emit(RaceConfig.TMALL_DISPATCH_STREAM, new Values(payment.getCreateTime(), payment));
+                    collector.emit(RaceConfig.TMALL_DISPATCH_STREAM, new Values(payment.getCreateTime(), payment.getPayAmount()));
                 }
             }
         }
