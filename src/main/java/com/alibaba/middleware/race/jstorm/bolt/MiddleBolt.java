@@ -13,6 +13,8 @@ import com.alibaba.middleware.race.jstorm.tuple.PaymentTuple;
 import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -34,16 +36,23 @@ public class MiddleBolt  implements IRichBolt {
 
         //payment list tuple
         if(field1 != null){
-            ArrayList<PaymentTuple>list = (ArrayList<PaymentTuple>)field1;
-            for(PaymentTuple payment : list){
-                collector.emit(RaceConfig.HASH_STREAM, new Values(payment.getOrderId(), payment, null));
-            }
+            //throw out directly
+            collector.emit(RaceConfig.payStream, new Values(field1));
 
         }else{
             //order list tuple
             ArrayList<OrderTuple>list = (ArrayList<OrderTuple>)field2;
-            for(OrderTuple order : list){
-                collector.emit(RaceConfig.HASH_STREAM, new Values(order.getOrderId(), null, order));
+            ArrayList<Long> idList = new ArrayList<>(list.size());
+
+            for (OrderTuple order : list){
+                idList.add(order.getOrderId());
+            }
+            //taobao list
+            if(list.get(0).getOrderType() == 0){
+                collector.emit(RaceConfig.taobaoStream, new Values(idList));
+            }
+            else{
+                collector.emit(RaceConfig.tmallStream, new Values(idList));
             }
         }
     }
@@ -55,7 +64,9 @@ public class MiddleBolt  implements IRichBolt {
 
     @Override
     public void declareOutputFields(OutputFieldsDeclarer declarer) {
-        declarer.declareStream(RaceConfig.HASH_STREAM, new Fields("orderId", "payment", "order"));
+        declarer.declareStream(RaceConfig.payStream, new Fields("payList"));
+        declarer.declareStream(RaceConfig.taobaoStream, new Fields("TBIdList"));
+        declarer.declareStream(RaceConfig.tmallStream, new Fields("TMIdList"));
     }
 
     @Override

@@ -54,32 +54,35 @@ public class RaceTopology {
         //ConfigExtension.setTaskOnDifferentNode(spoutConfig, true);
         //spout.addConfigurations(spoutConfig);
 
-        builder.setBolt("violentRatio", new ViolentRatioBolt(),1).globalGrouping(RaceConfig.InputSpoutName);
-        builder.setBolt("ratioSave", new RatioSaveBolt(),1).globalGrouping("violentRatio");
+        builder.setBolt("violentRatio", new ViolentRatioBolt(),1).shuffleGrouping(RaceConfig.InputSpoutName);
+        builder.setBolt("ratioSave", new RatioSaveBolt(),1).shuffleGrouping("violentRatio");
 
 
         builder.setBolt("middle", new MiddleBolt(), middle_bolt_parallelism).
-                globalGrouping(RaceConfig.InputSpoutName);
-        builder.setBolt(RaceConfig.HashBoltName, new HashBolt(), hash_bolt_parallelism_hint).setNumTasks(1)
-                .fieldsGrouping("middle", RaceConfig.HASH_STREAM, new Fields("orderId"));
+                shuffleGrouping(RaceConfig.InputSpoutName);
+        //builder.setBolt(RaceConfig.HashBoltName, new HashBolt(), hash_bolt_parallelism_hint).setNumTasks(1)
+        //        .fieldsGrouping("middle", RaceConfig.HASH_STREAM, new Fields("orderId"));
 
         //tmall data process
-        builder.setBolt(RaceConfig.TMDispatchBoltName, new TmallDispatchBolt(), dispatch_bolt_parallelism).setNumTasks(1).
-              localOrShuffleGrouping(RaceConfig.HashBoltName, RaceConfig.TMALL_DISPATCH_STREAM);//hash bolt emits different streams
+        //builder.setBolt(RaceConfig.TMDispatchBoltName, new TmallDispatchBolt(), dispatch_bolt_parallelism).setNumTasks(1).
+        //      localOrShuffleGrouping(RaceConfig.HashBoltName, RaceConfig.TMALL_DISPATCH_STREAM);//hash bolt emits different streams
         builder.setBolt(RaceConfig.TMCountBoltName, new TmallCountBolt(), count_Parallelism_hint).setNumTasks(1).
-                fieldsGrouping(RaceConfig.TMDispatchBoltName, new Fields("minute"));
+                shuffleGrouping("middle", RaceConfig.tmallStream).
+                shuffleGrouping("middle", RaceConfig.payStream);
 
         //taobao data process
-        builder.setBolt(RaceConfig.TBDispatchBoltName, new TaobaoDispatchBolt(), dispatch_bolt_parallelism).setNumTasks(1).
-              localOrShuffleGrouping(RaceConfig.HashBoltName, RaceConfig.TAOBAO_DISPATCH_STREAM);
+        //builder.setBolt(RaceConfig.TBDispatchBoltName, new TaobaoDispatchBolt(), dispatch_bolt_parallelism).setNumTasks(1).
+          //    localOrShuffleGrouping(RaceConfig.HashBoltName, RaceConfig.TAOBAO_DISPATCH_STREAM);
         builder.setBolt(RaceConfig.TBCountBoltName, new TaobaoCountBolt(), count_Parallelism_hint).setNumTasks(1).
-                fieldsGrouping(RaceConfig.TBDispatchBoltName, new Fields("minute"));
+                shuffleGrouping("middle", RaceConfig.taobaoStream).
+                shuffleGrouping("middle", RaceConfig.payStream);
+                //fieldsGrouping(RaceConfig.TBDispatchBoltName, new Fields("minute"));
 
-        //give up ratio
-        //pay ratio process (receive two streams: tmall stream, taobao stream, field grouping by minute)
-        //builder.setBolt(RaceConfig.RatioCountBoltName, new PayRatioBolt(), 1).setNumTasks(1).
-           //     fieldsGrouping(RaceConfig.TBDispatchBoltName, new Fields("minute")).
-            //    fieldsGrouping(RaceConfig.TMDispatchBoltName, new Fields("minute"));
+        //save taobao/ tmall to tair
+        builder.setBolt("orderSave", new OrderSaveBolt(),1).setNumTasks(1).
+                shuffleGrouping(RaceConfig.TMCountBoltName, RaceConfig.TMALL_DISPATCH_STREAM).
+                shuffleGrouping(RaceConfig.TBCountBoltName, RaceConfig.TAOBAO_DISPATCH_STREAM);
+
 
         try {
             String topologyName = RaceConfig.JstormTopologyName;
