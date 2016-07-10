@@ -83,7 +83,7 @@ public class PayRatioBolt implements IRichBolt {
             if (mobileAmount == null)
                 mobileAmount = 0L;
             //double ratio = Arith.div(mobileAmount * 1.0, pcAmount * 1.0, 2);//精确除法,保留2位
-            ratio = mobileAmount / pcAmount;
+            ratio = mobileAmount / (double)pcAmount;
             ratioMap.put(createTime, ratio);
 
         } else {
