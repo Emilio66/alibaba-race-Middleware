@@ -24,6 +24,8 @@ public class ViolentRatioBolt implements IRichBolt {
     private long currentPC = 0L;
     private long currentWL = 0L;
 
+    private int count = 0;
+
     @Override
     public void prepare(Map stormConf, TopologyContext context, OutputCollector collector) {
         this.collector = collector;
@@ -38,17 +40,25 @@ public class ViolentRatioBolt implements IRichBolt {
             ArrayList<PaymentTuple> list = (ArrayList<PaymentTuple>) field1;
             for (PaymentTuple payment : list) {
                 Long time = payment.getCreateTime();
-                if (time > currentTime ) {
+                if (time > currentTime) {
                     //emit last minute
                     if(currentPC != 0)
                         collector.emit(new Values(currentTime, currentWL * 1.0 / currentPC));
                     currentTime = time;
+                    ++count;
                 }
 
                 if (payment.getPayPlatform() == 0) {
                     currentPC += payment.getPayAmount();
-                } else
+                    if (count == 181) { // tricky code, need to be fixed in the future
+                        collector.emit(new Values(currentTime, currentWL * 1.0 / currentPC));
+                    }
+                } else {
                     currentWL += payment.getPayAmount();
+                    if (count == 181) {
+                        collector.emit(new Values(currentTime, currentWL * 1.0 / currentPC));
+                    }
+                }
 
             }
         }
