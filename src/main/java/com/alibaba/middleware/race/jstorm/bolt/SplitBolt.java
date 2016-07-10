@@ -29,6 +29,7 @@ public class SplitBolt implements IRichBolt{
     private Set<Long> taobaoOrder = new HashSet<>();
     private Set<Long> tmallOrder = new HashSet<>();
     private Map<Long, List<PaymentTuple>> paymentBuffer = new HashMap<>();
+    private Map<Long, MsgObject> msgMap = new HashMap<>();
 
     @Override
     public void prepare(Map stormConf, TopologyContext context, OutputCollector collector) {
@@ -40,6 +41,7 @@ public class SplitBolt implements IRichBolt{
         Object field1 = input.getValue(0);
         Object field2 = input.getValue(1);
 
+        /*
         if (field1 != null) {
             List<PaymentTuple> paymentTuples = (List<PaymentTuple>) field1;
 
@@ -93,8 +95,8 @@ public class SplitBolt implements IRichBolt{
                 }
             }
         }
+        */
 
-        /*
         if (field1 != null) {
             List<PaymentTuple> paymentTuples = (List<PaymentTuple>) field1;
             for (PaymentTuple payment : paymentTuples) {
@@ -139,7 +141,7 @@ public class SplitBolt implements IRichBolt{
                 }
             }
         }
-        */
+
     }
 
     private String getStreamNameByType(short orderType) {
