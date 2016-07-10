@@ -8,6 +8,7 @@ import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
 import com.alibaba.middleware.race.RaceConfig;
+import com.alibaba.middleware.race.Tair.TairOperatorImpl;
 import com.alibaba.middleware.race.jstorm.tuple.PaymentTuple;
 import org.apache.log4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,28 +26,52 @@ import java.util.concurrent.ConcurrentHashMap;
 public class TaobaoDispatchBolt implements IRichBolt{
     private OutputCollector collector;
     private static final Logger LOG = Logger.getLogger(TaobaoDispatchBolt.class);
+    private int count = 0;
+    private long currentTime = 0L;
+    private long currentMoney = 0L;
+    private String prefix = RaceConfig.prex_taobao;
+    private TairOperatorImpl tairOperator;
+
     //unique payment set, same hashcode but not equal
-    private Set<PaymentTuple> distinctSet = new HashSet<PaymentTuple>();
+    //private Set<PaymentTuple> distinctSet = new HashSet<PaymentTuple>();
 
     @Override
     public void prepare(Map map, TopologyContext topologyContext, OutputCollector outputCollector) {
         this.collector = outputCollector;
+        tairOperator = TairOperatorImpl.newInstance();
     }
 
     @Override
     public void execute(Tuple tuple) {
         //cast to payment tuple
         PaymentTuple payment = (PaymentTuple) tuple.getValue(0);
+
+        long minute= payment.getCreateTime();
+        long money = payment.getPayAmount();
+
+        if(minute > currentTime && currentTime != 0){
+            long savedTime = minute * 60;
+            double savedMoney = currentMoney / 100.0;
+            //write last minute
+            tairOperator.write(prefix+"_"+savedTime, savedMoney); //存入时，保留两位小数
+            currentTime = minute;
+            currentMoney = 0;   //清零
+            ++count;
+        }
+        currentMoney += money;
+        if(count == 181)
+            tairOperator.write(prefix+"_"+minute*60,currentMoney/100.0); //存入时，保留两位小数
       //  LOG.info("TaobaoDispatchBolt get "+payment);
         //去重
-        if(!distinctSet.contains(payment)){
-            //only emit useful fields [minute, payAmount, payPlatform] to count bolts
-            collector.emit(new Values(payment.getCreateTime(),  payment.getPayAmount(), payment.getPayPlatform()));
+        //if(!distinctSet.contains(payment)){
 
-            distinctSet.add(payment);
+          //  distinctSet.add(payment);
+            //only emit useful fields [minute, payAmount, payPlatform] to count bolts
+            //collector.emit(new Values(payment.getCreateTime(),  payment.getPayAmount(), payment.getPayPlatform()));
+
           //  LOG.info("TaobaoDispatchBolt emit "+payment);
-        }
-        collector.ack(tuple);
+        //}
+        //collector.ack(tuple);
     }
 
     //declare useful fields
