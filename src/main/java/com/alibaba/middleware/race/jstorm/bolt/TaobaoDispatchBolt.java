@@ -49,7 +49,11 @@ public class TaobaoDispatchBolt implements IRichBolt{
         long minute= payment.getCreateTime();
         long money = payment.getPayAmount();
 
-        if(minute > currentTime && currentTime != 0){
+        if (currentTime == 0) {
+            currentTime = minute;
+        }
+
+        if(minute > currentTime){
             long savedTime = minute * 60;
             double savedMoney = currentMoney / 100.0;
             //write last minute
