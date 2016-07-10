@@ -36,13 +36,13 @@ public class TmallDispatchBolt implements IRichBolt {
     @Override
     public void prepare(Map map, TopologyContext topologyContext, OutputCollector outputCollector) {
         this.collector = outputCollector;
+        tairOperator = TairOperatorImpl.newInstance();
     }
 
     @Override
     public void execute(Tuple tuple) {
         //cast to payment tuple
         PaymentTuple payment = (PaymentTuple) tuple.getValue(0);
-        LOG.info("Get payment: " + payment.toString());
 
         long minute= payment.getCreateTime();
         long money = payment.getPayAmount();
