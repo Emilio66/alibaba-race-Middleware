@@ -68,16 +68,27 @@ public class SplitBolt implements IRichBolt{
                 if (order.getOrderType() == 0) { // taobao order
                     taobaoOrder.add(order.getOrderId());
                     if (paymentBuffer.containsKey(order.getOrderId())) {
-                        for (PaymentTuple payment : paymentBuffer.get(order.getOrderId())) {
+                        List<PaymentTuple> paymentList = paymentBuffer.get(order.getOrderId());
+                        if (paymentList == null)
+                            continue;
+
+                        for (PaymentTuple payment : paymentList) {
                             collector.emit(RaceConfig.taobaoStream, new Values(payment));
                         }
+                        paymentBuffer.remove(order.getOrderId());
                     }
                 } else {
                     tmallOrder.add(order.getOrderId());
+
                     if (paymentBuffer.containsKey(order.getOrderId())) {
+                        List<PaymentTuple> paymentList = paymentBuffer.get(order.getOrderId());
+                        if (paymentList == null)
+                            continue;
+
                         for (PaymentTuple payment : paymentBuffer.get(order.getOrderId())) {
                             collector.emit(RaceConfig.tmallStream, new Values(payment));
                         }
+                        paymentBuffer.remove(order.getOrderId());
                     }
                 }
             }
