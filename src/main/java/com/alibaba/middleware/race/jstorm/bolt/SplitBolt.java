@@ -10,12 +10,10 @@ import backtype.storm.tuple.Values;
 import com.alibaba.middleware.race.RaceConfig;
 import com.alibaba.middleware.race.jstorm.tuple.OrderTuple;
 import com.alibaba.middleware.race.jstorm.tuple.PaymentTuple;
+import com.alibaba.middleware.race.model.OrderMessage;
 import org.apache.log4j.Logger;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.LinkedBlockingDeque;
 
 /**
@@ -30,6 +28,8 @@ public class SplitBolt implements IRichBolt{
 
     private Set<Long> taobaoOrder = new HashSet<>();
     private Set<Long> tmallOrder = new HashSet<>();
+    private Map<Long, MsgObject> msgMap = new HashMap<>();
+
     private LinkedBlockingDeque<PaymentTuple> paymentBuffer = new LinkedBlockingDeque<>();
 
     class BufferThread extends Thread {
@@ -41,7 +41,7 @@ public class SplitBolt implements IRichBolt{
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            
+
             while (true) {
                 try {
                     PaymentTuple payment = paymentBuffer.take();
@@ -65,8 +65,8 @@ public class SplitBolt implements IRichBolt{
     @Override
     public void prepare(Map stormConf, TopologyContext context, OutputCollector collector) {
         this.collector = collector;
-        BufferThread buffer = new SplitBolt.BufferThread();
-        buffer.start();
+//        BufferThread buffer = new SplitBolt.BufferThread();
+//        buffer.start();
     }
 
     @Override
@@ -78,19 +78,50 @@ public class SplitBolt implements IRichBolt{
             List<PaymentTuple> paymentTuples = (List<PaymentTuple>) field1;
             for (PaymentTuple payment : paymentTuples) {
                 //LOG.info("Get payment: " + payment);
-                paymentBuffer.addLast(payment);
+//                paymentBuffer.addLast(payment);
+                MsgObject msgObj = msgMap.get(payment.getOrderId());
+                if (msgObj == null) {
+                    MsgObject obj = new MsgObject();
+                    obj.getPaymentTuples().add(payment);
+                    msgMap.put(payment.getOrderId(), obj);
+                } else if (msgObj.getOrderTuple() == null) {
+                    msgObj.getPaymentTuples().add(payment);
+                } else {
+                    collector.emit(getStreamNameByType(msgObj.getOrderTuple().getOrderType()), new Values(payment));
+                }
+
             }
         } else {
             List<OrderTuple> orderTuples = (List<OrderTuple>) field2;
             for (OrderTuple order : orderTuples) {
                 //LOG.info("Get order: " + order.toString());
-                if (order.getOrderType() == 0) { // taobao order
+                /*if (order.getOrderType() == 0) { // taobao order
                     taobaoOrder.add(order.getOrderId());
                 } else {
                     tmallOrder.add(order.getOrderId());
+                }*/
+                MsgObject msgObj = msgMap.get(order.getOrderId());
+                if (msgObj == null) {
+                    MsgObject obj = new MsgObject();
+                    obj.setOrderTuple(order);
+                    msgMap.put(order.getOrderId(), obj);
+                } else if (msgObj.getOrderTuple() == null) {
+                    msgObj.setOrderTuple(order);
+                    List<PaymentTuple> existingPayments = msgObj.getPaymentTuples();
+                    for (PaymentTuple payment : existingPayments) {
+                        collector.emit(getStreamNameByType(order.getOrderType()), new Values(payment));
+                    }
+                    msgObj.getPaymentTuples().clear();
+
+                } else {
+                    // should not enter this branch.
                 }
             }
         }
+    }
+
+    private String getStreamNameByType(short orderType) {
+        return orderType == 0 ? RaceConfig.taobaoStream : RaceConfig.tmallStream;
     }
 
     @Override
@@ -108,5 +139,27 @@ public class SplitBolt implements IRichBolt{
     @Override
     public Map<String, Object> getComponentConfiguration() {
         return null;
+    }
+
+    class MsgObject {
+        private List<PaymentTuple> paymentTuples = new ArrayList<>();
+        private OrderTuple orderTuple;
+
+
+        public List<PaymentTuple> getPaymentTuples() {
+            return paymentTuples;
+        }
+
+        public void setPaymentTuples(List<PaymentTuple> paymentTuples) {
+            this.paymentTuples = paymentTuples;
+        }
+
+        public OrderTuple getOrderTuple() {
+            return orderTuple;
+        }
+
+        public void setOrderTuple(OrderTuple orderTuple) {
+            this.orderTuple = orderTuple;
+        }
     }
 }
