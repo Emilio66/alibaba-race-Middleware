@@ -36,10 +36,15 @@ public class SplitBolt implements IRichBolt{
 
         @Override
         public void run() {
+            try {
+                Thread.sleep(10000);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            
             while (true) {
                 try {
                     PaymentTuple payment = paymentBuffer.take();
-                    LOG.info("Get payment: " + payment.toString());
 
                     if (taobaoOrder.contains(payment.getOrderId())) {
                         collector.emit(RaceConfig.taobaoStream, new Values(payment));
@@ -47,7 +52,7 @@ public class SplitBolt implements IRichBolt{
                         collector.emit(RaceConfig.tmallStream, new Values(payment));
                     } else {
                         paymentBuffer.addFirst(payment);
-                        Thread.sleep(100);
+                        Thread.sleep(10);
                     }
                 } catch (InterruptedException e) {
                     e.printStackTrace();
@@ -81,10 +86,8 @@ public class SplitBolt implements IRichBolt{
                 //LOG.info("Get order: " + order.toString());
                 if (order.getOrderType() == 0) { // taobao order
                     taobaoOrder.add(order.getOrderId());
-                    LOG.info("Add orderId: " + order.getOrderId() + " to taobaoOrder");
                 } else {
                     tmallOrder.add(order.getOrderId());
-                    LOG.info("Add orderId: " + order.getOrderId() + " to tmallOrder");
                 }
             }
         }
