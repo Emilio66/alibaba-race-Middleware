@@ -69,7 +69,10 @@ public class SplitBolt implements IRichBolt{
         Object field2 = input.getValue(1);
 
         if (field1 != null) {
-           paymentBuffer.addAll((List<PaymentTuple>) field1);
+            List<PaymentTuple> paymentTuples = (List<PaymentTuple>) field1;
+            for (PaymentTuple payment : paymentTuples) {
+                paymentBuffer.addLast(payment);
+            }
         } else {
             List<OrderTuple> orderTuples = (List<OrderTuple>) field2;
             for (OrderTuple order : orderTuples) {
