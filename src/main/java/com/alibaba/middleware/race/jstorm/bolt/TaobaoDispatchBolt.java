@@ -45,6 +45,7 @@ public class TaobaoDispatchBolt implements IRichBolt{
     public void execute(Tuple tuple) {
         //cast to payment tuple
         PaymentTuple payment = (PaymentTuple) tuple.getValue(0);
+        LOG.info("Get payment: " + payment.toString());
 
         long minute= payment.getCreateTime();
         long money = payment.getPayAmount();

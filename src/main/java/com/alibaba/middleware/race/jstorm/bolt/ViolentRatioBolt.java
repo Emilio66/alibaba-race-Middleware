@@ -9,6 +9,7 @@ import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
 import com.alibaba.middleware.race.RaceConfig;
 import com.alibaba.middleware.race.jstorm.tuple.PaymentTuple;
+import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.Map;
@@ -19,6 +20,9 @@ import java.util.Map;
  * 不超过就累加
  */
 public class ViolentRatioBolt implements IRichBolt {
+
+    private static final Logger LOG = Logger.getLogger(ViolentRatioBolt.class);
+
     private OutputCollector collector;
     private long currentTime = 0L;
     private long currentPC = 0L;
@@ -42,8 +46,10 @@ public class ViolentRatioBolt implements IRichBolt {
                 Long time = payment.getCreateTime();
                 if (time > currentTime) {
                     //emit last minute
-                    if(currentPC != 0)
+                    if(currentPC != 0) {
+                        LOG.info("Emit ratio at count: " + count);
                         collector.emit(new Values(currentTime, currentWL * 1.0 / currentPC));
+                    }
                     currentTime = time;
                     ++count;
                 }
@@ -51,11 +57,13 @@ public class ViolentRatioBolt implements IRichBolt {
                 if (payment.getPayPlatform() == 0) {
                     currentPC += payment.getPayAmount();
                     if (count == 181) { // tricky code, need to be fixed in the future
+                        LOG.info("Emit ratio at count: " + count);
                         collector.emit(new Values(currentTime, currentWL * 1.0 / currentPC));
                     }
                 } else {
                     currentWL += payment.getPayAmount();
                     if (count == 181) {
+                        LOG.info("Emit ratio at count: " + count);
                         collector.emit(new Values(currentTime, currentWL * 1.0 / currentPC));
                     }
                 }
