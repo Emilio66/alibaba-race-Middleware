@@ -41,10 +41,8 @@ public class SplitBolt implements IRichBolt{
                     PaymentTuple payment = paymentBuffer.take();
 
                     if (taobaoOrder.contains(payment.getOrderId())) {
-                        LOG.info("Emit payment to taobaoStream: " + payment.toString());
                         collector.emit(RaceConfig.taobaoStream, new Values(payment));
                     } else if (tmallOrder.contains(payment.getOrderId())) {
-                        LOG.info("Emit payment to tmallStream: " + payment.toString());
                         collector.emit(RaceConfig.tmallStream, new Values(payment));
                     } else {
                         paymentBuffer.addFirst(payment);
