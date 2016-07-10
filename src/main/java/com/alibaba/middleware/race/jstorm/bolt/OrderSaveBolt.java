@@ -26,6 +26,8 @@ public class OrderSaveBolt implements IRichBolt {
     private String tbPrefix;
     private String tmPrefix;
 
+    private int tbCount = 0; //tricky count
+    private int tmCount = 0; //tricky count
     @Override
     public void prepare(Map stormConf, TopologyContext context, OutputCollector collector) {
         LOG.info("create ratio bolt: " + this.toString());
@@ -46,17 +48,24 @@ public class OrderSaveBolt implements IRichBolt {
                 tairOperator.write(tbPrefix+"_"+(tbCurTime * 60), tbCurAmount/100.0);
                 tbCurTime = minute;
                 tbCurAmount = 0L; //clear 0
+                ++tbCount;
             }
             tbCurAmount += money;
-
+            if (tbCount == 181){
+                tairOperator.write(tbPrefix+"_"+(tbCurTime * 60), tbCurAmount/100.0);
+            }
         }else{
 
             if(minute > tmCurTime && tmCurTime != 0){
                 tairOperator.write(tmPrefix+"_"+(tmCurTime * 60), tmCurAmount/100.0);
                 tmCurTime = minute;
                 tmCurAmount = 0L;
+                ++tmCount;
             }
             tmCurAmount += money;
+            if(tmCount == 181){
+                tairOperator.write(tmPrefix+"_"+(tmCurTime * 60), tmCurAmount/100.0);
+            }
         }
     }
 
