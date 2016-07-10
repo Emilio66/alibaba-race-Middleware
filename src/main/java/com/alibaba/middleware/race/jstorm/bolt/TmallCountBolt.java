@@ -52,7 +52,7 @@ public class TmallCountBolt implements IRichBolt{
             }
         }
 
-        collector.ack(tuple);
+        //collector.ack(tuple);
     }
 
     @Override
@@ -62,7 +62,8 @@ public class TmallCountBolt implements IRichBolt{
 
     @Override
     public void declareOutputFields(OutputFieldsDeclarer declarer) {
-        declarer.declare(new Fields("minute", "payment"));
+        //declarer.declare(new Fields("minute", "payment"));
+        declarer.declareStream(RaceConfig.TMALL_DISPATCH_STREAM,new Fields("minute", "payment"));
     }
 
     @Override

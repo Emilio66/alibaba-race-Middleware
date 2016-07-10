@@ -48,11 +48,12 @@ public class MiddleBolt  implements IRichBolt {
                 idList.add(order.getOrderId());
             }
             //taobao list
-            if(list.get(0).getOrderType() == 0){
-                collector.emit(RaceConfig.taobaoStream, new Values(idList));
-            }
-            else{
-                collector.emit(RaceConfig.tmallStream, new Values(idList));
+            if(list.size() > 0) {
+                if (list.get(0).getOrderType() == 0) {
+                    collector.emit(RaceConfig.taobaoStream, new Values(idList));
+                } else {
+                    collector.emit(RaceConfig.tmallStream, new Values(idList));
+                }
             }
         }
     }
