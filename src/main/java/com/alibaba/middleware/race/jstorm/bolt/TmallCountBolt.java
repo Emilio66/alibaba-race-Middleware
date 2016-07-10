@@ -13,6 +13,7 @@ import com.alibaba.middleware.race.jstorm.tuple.PaymentTuple;
 import org.apache.log4j.Logger;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -24,7 +25,7 @@ public class TmallCountBolt implements IRichBolt{
 
     private static final Logger Log = Logger.getLogger(TmallCountBolt.class);
     private OutputCollector collector;
-    private Set<Long> orderSet;
+    private Set<Long> orderSet = new HashSet<>();
     private TairOperatorImpl tairOperator;
     private String prefix;
     @Override
