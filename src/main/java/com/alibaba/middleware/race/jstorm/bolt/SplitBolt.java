@@ -28,45 +28,11 @@ public class SplitBolt implements IRichBolt{
 
     private Set<Long> taobaoOrder = new HashSet<>();
     private Set<Long> tmallOrder = new HashSet<>();
-    private Map<Long, MsgObject> msgMap = new HashMap<>();
-
-    private LinkedBlockingDeque<PaymentTuple> paymentBuffer = new LinkedBlockingDeque<>();
-
-    class BufferThread extends Thread {
-
-        @Override
-        public void run() {
-            try {
-                Thread.sleep(10000);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-
-            while (true) {
-                try {
-                    PaymentTuple payment = paymentBuffer.take();
-
-                    if (taobaoOrder.contains(payment.getOrderId())) {
-                        collector.emit(RaceConfig.taobaoStream, new Values(payment));
-                    } else if (tmallOrder.contains(payment.getOrderId())) {
-                        collector.emit(RaceConfig.tmallStream, new Values(payment));
-                    } else {
-                        paymentBuffer.addFirst(payment);
-                        Thread.sleep(10);
-                    }
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-    }
-
+    private Map<Long, List<PaymentTuple>> paymentBuffer = new HashMap<>();
 
     @Override
     public void prepare(Map stormConf, TopologyContext context, OutputCollector collector) {
         this.collector = collector;
-//        BufferThread buffer = new SplitBolt.BufferThread();
-//        buffer.start();
     }
 
     @Override
@@ -74,6 +40,50 @@ public class SplitBolt implements IRichBolt{
         Object field1 = input.getValue(0);
         Object field2 = input.getValue(1);
 
+        if (field1 != null) {
+            List<PaymentTuple> paymentTuples = (List<PaymentTuple>) field1;
+
+            for (PaymentTuple payment : paymentTuples) {
+                if (taobaoOrder.contains(payment.getOrderId())) {
+                    collector.emit(RaceConfig.taobaoStream, new Values(payment));
+                } else if (tmallOrder.contains(payment.getOrderId())) {
+                    collector.emit(RaceConfig.tmallStream, new Values(payment));
+                } else {
+                    if (paymentBuffer.containsKey(payment.getOrderId())) {
+                        List<PaymentTuple> paymentList = paymentBuffer.get(payment.getOrderId());
+                        paymentList.add(payment);
+                    } else {
+                        List<PaymentTuple> paymentList = new ArrayList<>();
+                        paymentList.add(payment);
+                        paymentBuffer.put(payment.getOrderId(), paymentList);
+                    }
+                }
+            }
+
+        } else {
+            List<OrderTuple> orderTuples = (List<OrderTuple>) field2;
+
+            for (OrderTuple order : orderTuples) {
+                //LOG.info("Get order: " + order.toString());
+                if (order.getOrderType() == 0) { // taobao order
+                    taobaoOrder.add(order.getOrderId());
+                    if (paymentBuffer.containsKey(order.getOrderId())) {
+                        for (PaymentTuple payment : paymentBuffer.get(order.getOrderId())) {
+                            collector.emit(RaceConfig.taobaoStream, new Values(payment));
+                        }
+                    }
+                } else {
+                    tmallOrder.add(order.getOrderId());
+                    if (paymentBuffer.containsKey(order.getOrderId())) {
+                        for (PaymentTuple payment : paymentBuffer.get(order.getOrderId())) {
+                            collector.emit(RaceConfig.tmallStream, new Values(payment));
+                        }
+                    }
+                }
+            }
+        }
+
+        /*
         if (field1 != null) {
             List<PaymentTuple> paymentTuples = (List<PaymentTuple>) field1;
             for (PaymentTuple payment : paymentTuples) {
@@ -95,11 +105,11 @@ public class SplitBolt implements IRichBolt{
             List<OrderTuple> orderTuples = (List<OrderTuple>) field2;
             for (OrderTuple order : orderTuples) {
                 //LOG.info("Get order: " + order.toString());
-                /*if (order.getOrderType() == 0) { // taobao order
+                if (order.getOrderType() == 0) { // taobao order
                     taobaoOrder.add(order.getOrderId());
                 } else {
                     tmallOrder.add(order.getOrderId());
-                }*/
+                }
                 MsgObject msgObj = msgMap.get(order.getOrderId());
                 if (msgObj == null) {
                     MsgObject obj = new MsgObject();
@@ -118,6 +128,7 @@ public class SplitBolt implements IRichBolt{
                 }
             }
         }
+        */
     }
 
     private String getStreamNameByType(short orderType) {
