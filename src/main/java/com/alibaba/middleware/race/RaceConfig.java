@@ -52,5 +52,6 @@ public class RaceConfig implements Serializable {
     public static final String TAOBAO_DISPATCH_STREAM = "taobao_dispatch_stream";
     public static final String Violent_Pay_Stream = "violent_pay";
     public static final String ORDER_SAVE_STREAM = "order_save";
+    public static final String SPLIT_BOLT_NAME = "split_payment";
 
 }
