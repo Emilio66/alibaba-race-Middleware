@@ -139,7 +139,7 @@ public class TmallDispatchBolt implements IRichBolt {
      * @param minute
      */
     private void flushAmountInMinute(long amount, long minute) {
-        tairOperator.write(prefix + "_" + minute * 60, amount / 100); //存入时，保留两位小数
+        tairOperator.write(prefix + "_" + minute * 60, amount / 100.0); //存入时，保留两位小数
     }
 
     @Override
