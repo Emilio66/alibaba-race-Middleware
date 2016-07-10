@@ -81,8 +81,10 @@ public class SplitBolt implements IRichBolt{
                 //LOG.info("Get order: " + order.toString());
                 if (order.getOrderType() == 0) { // taobao order
                     taobaoOrder.add(order.getOrderId());
+                    LOG.info("Add orderId: " + order.getOrderId() + " to taobaoOrder");
                 } else {
                     tmallOrder.add(order.getOrderId());
+                    LOG.info("Add orderId: " + order.getOrderId() + " to tmallOrder");
                 }
             }
         }
