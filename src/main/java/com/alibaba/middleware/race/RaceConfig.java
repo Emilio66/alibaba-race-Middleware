@@ -22,7 +22,7 @@ public class RaceConfig implements Serializable {
     //这些jstorm/rocketMq/tair 的集群配置信息，这些配置信息在正式提交代码前会被公布
 
     public static String  JstormTopologyName    = "424452my9i";
-    public static String  MetaConsumerGroup     = "424452my9i" + System.currentTimeMillis();    //RabbitMQ consumer group
+    public static String  MetaConsumerGroup     = "424452my9i";    //RabbitMQ consumer group
     public static String  MqPayTopic            = "MiddlewareRaceTestData_Pay"; //不同的topic
     public static String  MqTmallTradeTopic     = "MiddlewareRaceTestData_TMOrder";
     public static String  MqTaobaoTradeTopic    = "MiddlewareRaceTestData_TBOrder";

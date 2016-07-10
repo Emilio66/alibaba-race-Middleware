@@ -43,7 +43,7 @@ public class RaceTopology {
         int hash_bolt_parallelism_hint = 6;
         int dispatch_bolt_parallelism = 2;
         int count_Parallelism_hint = 1;
-        int middle_bolt_parallelism =2;
+        int middle_bolt_parallelism =4;
 
         TopologyBuilder builder = new TopologyBuilder();
 
