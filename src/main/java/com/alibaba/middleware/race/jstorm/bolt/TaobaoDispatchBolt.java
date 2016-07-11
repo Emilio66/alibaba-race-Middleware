@@ -38,7 +38,7 @@ public class TaobaoDispatchBolt implements IRichBolt{
     private TairOperatorImpl tairOperator;
 
     //unique payment set, same hashcode but not equal
-    //private Set<PaymentTuple> distinctSet = new HashSet<PaymentTuple>();
+    private Set<PaymentTuple> distinctSet = new HashSet<PaymentTuple>();
 
     @Override
     public void prepare(Map map, TopologyContext topologyContext, OutputCollector outputCollector) {
@@ -95,41 +95,45 @@ public class TaobaoDispatchBolt implements IRichBolt{
     public void execute(Tuple tuple) {
         //cast to payment tuple
         PaymentTuple payment = (PaymentTuple) tuple.getValue(0);
-        long minute= payment.getCreateTime();
-        long amount = payment.getPayAmount();
+        if(!distinctSet.contains(payment)) {
+            distinctSet.add(payment);
+            long minute = payment.getCreateTime();
+            long amount = payment.getPayAmount();
 
-        // 首先更新Map中的统计值
-        if (amountMap.get(minute) == null) {
-            amountMap.put(minute, amount);
-        } else {
-            amountMap.put(minute, amountMap.get(minute) + amount);
-        }
+            // 首先更新Map中的统计值
+            if (amountMap.get(minute) == null) {
+                amountMap.put(minute, amount);
+            } else {
+                amountMap.put(minute, amountMap.get(minute) + amount);
+            }
 
-        // ---- 下面开始写入Tair的逻辑 -----
-        // 这里的逻辑可以处理payment乱序的情况.
+            // ---- 下面开始写入Tair的逻辑 -----
+            // 这里的逻辑可以处理payment乱序的情况.
 
-        // 首先初始化currentMin
-        if (currentMin == 0) {
-            currentMin = minute;
-        }
+            // 首先初始化currentMin
+            if (currentMin == 0) {
+                currentMin = minute;
+            }
 
-        // 写入Tair逻辑
-        if (minute > currentMin) {
-            // 判断是否跳分钟了. 如果跳了, 则写入上一个数据
-            flushAmountInMinute(amountMap.get(currentMin), currentMin);
+            // 写入Tair逻辑
+            if (minute > currentMin) {
+                // 判断是否跳分钟了. 如果跳了, 则写入上一个数据
+                flushAmountInMinute(amountMap.get(currentMin), currentMin);
 
-            // 当前分钟需要更新
-            currentMin = minute;
-        } else if (minute < currentMin) {
-            // 说明写入了老的分钟数据, 那一条数据需要在tair上被更新. 不需要更新当前时间
-            flushAmountInMinute(amountMap.get(minute), minute);
-        } else {
-            // 说明当前分钟还在写入, 不需要进行操作.
-        }
+                // 当前分钟需要更新
+                currentMin = minute;
+            } else if (minute < currentMin) {
+                // 说明写入了老的分钟数据, 那一条数据需要在tair上被更新. 不需要更新当前时间
+                flushAmountInMinute(amountMap.get(minute), minute);
+            } else {
+                // 说明当前分钟还在写入, 不需要进行操作.
+            }
 
-        // 写入最后一条数据
-        if(amountMap.size() == 181) {
-            flushAmountInMinute(amountMap.get(minute), minute);
+            // 写入最后一条数据
+            if (amountMap.size() == 181) {
+                flushAmountInMinute(amountMap.get(minute), minute);
+            }
+
         }
     }
 
