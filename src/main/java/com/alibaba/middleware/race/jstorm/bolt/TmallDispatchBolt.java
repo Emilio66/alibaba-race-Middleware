@@ -116,13 +116,16 @@ public class TmallDispatchBolt implements IRichBolt {
         // 写入Tair逻辑
         if (minute > currentMin) {
             // 判断是否跳分钟了. 如果跳了, 则写入上一个数据
-            flushAmountInMinute(amountMap.get(currentMin), currentMin);
-
+            for (long min = currentMin - 5; min <= currentMin; ++min) {
+                if (amountMap.containsKey(min)) {
+                    flushAmountInMinute(amountMap.get(min), min);
+                }
+            }
             // 当前分钟需要更新
             currentMin = minute;
         } else if (minute < currentMin) {
             // 说明写入了老的分钟数据, 那一条数据需要在tair上被更新. 不需要更新当前时间
-            flushAmountInMinute(amountMap.get(minute), minute);
+            //flushAmountInMinute(amountMap.get(minute), minute);
         } else {
             // 说明当前分钟还在写入, 不需要进行操作.
         }
